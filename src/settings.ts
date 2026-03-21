@@ -2,21 +2,21 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import type ZkPlugin from "./main";
 
 export interface ZkSettings {
+  coreRootPath: string;
+  refRootPath: string;
+  tempRootPath: string;
   enableBacklinks: boolean;
   enableDecayDetection: boolean;
   decayDays: number;
-  hotkeyCoreMode: string;
-  hotkeyRefMode: string;
-  hotkeyTempMode: string;
 }
 
 export const DEFAULT_SETTINGS: ZkSettings = {
+  coreRootPath: "Core/Core.md",
+  refRootPath: "Ref/Ref.md",
+  tempRootPath: "Temp/Temp.md",
   enableBacklinks: true,
   enableDecayDetection: true,
   decayDays: 14,
-  hotkeyCoreMode: "",
-  hotkeyRefMode: "",
-  hotkeyTempMode: "",
 };
 
 export class ZkSettingTab extends PluginSettingTab {
@@ -32,6 +32,48 @@ export class ZkSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     containerEl.createEl("h2", { text: "Zk 設定" });
+
+    // --- モードのルートパス ---
+    containerEl.createEl("h3", { text: "モードのルートノート" });
+
+    new Setting(containerEl)
+      .setName("Core ルートノートのパス")
+      .setDesc("Coreモードのルートノート（vault内の相対パス）")
+      .addText((text) =>
+        text
+          .setPlaceholder("Core/Core.md")
+          .setValue(this.plugin.settings.coreRootPath)
+          .onChange(async (value) => {
+            this.plugin.settings.coreRootPath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Ref ルートノートのパス")
+      .setDesc("Refモードのルートノート（vault内の相対パス）")
+      .addText((text) =>
+        text
+          .setPlaceholder("Ref/Ref.md")
+          .setValue(this.plugin.settings.refRootPath)
+          .onChange(async (value) => {
+            this.plugin.settings.refRootPath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Temp ルートノートのパス")
+      .setDesc("Tempモードのルートノート（vault内の相対パス）")
+      .addText((text) =>
+        text
+          .setPlaceholder("Temp/Temp.md")
+          .setValue(this.plugin.settings.tempRootPath)
+          .onChange(async (value) => {
+            this.plugin.settings.tempRootPath = value;
+            await this.plugin.saveSettings();
+          })
+      );
 
     // --- バックリンク ---
     containerEl.createEl("h3", { text: "バックリンク" });
