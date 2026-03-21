@@ -1,0 +1,10 @@
+{
+  "id": "zk",
+  "name": "Zk",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "CLI-oriented Zettelkasten for Obsidian",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
