@@ -39,6 +39,13 @@ describe("isInCoreOrRef", () => {
   test("フォルダ名の前方一致では誤判定しない", () => {
     expect(isInCoreOrRef("CoreExtra/note.md", settings)).toBe(false);
   });
+
+  test("除外パターンにマッチするパスはfalseを返す", () => {
+    const s = { ...settings, backlinkExcludePatterns: ["Meta/Template/**"] };
+    expect(isInCoreOrRef("Core/note.md", s)).toBe(true);
+    const sWithCore = { ...s, coreRootPath: "Meta/Template/Core.md" };
+    expect(isInCoreOrRef("Meta/Template/note.md", sWithCore)).toBe(false);
+  });
 });
 
 // =========================================================
@@ -106,6 +113,44 @@ describe("getBacklinkFiles", () => {
 
     const result = getBacklinkFiles(app as any, target as any);
     expect(result).toHaveLength(0);
+  });
+
+  test("excludePatternsにマッチするソースファイルは除外される", () => {
+    const target = fakeFile("Core/target.md");
+    const source = fakeFile("Meta/Template/source.md");
+
+    const app = {
+      metadataCache: {
+        resolvedLinks: { "Meta/Template/source.md": { "Core/target.md": 1 } },
+        getFileCache: vi.fn().mockReturnValue({ links: [{ link: "target" }] }),
+        getFirstLinkpathDest: vi.fn().mockReturnValue(target),
+      },
+      vault: {
+        getFileByPath: vi.fn().mockReturnValue(source),
+      },
+    };
+
+    const result = getBacklinkFiles(app as any, target as any, ["Meta/Template/**"]);
+    expect(result).toHaveLength(0);
+  });
+
+  test("excludePatternsが空の場合は除外しない", () => {
+    const target = fakeFile("Core/target.md");
+    const source = fakeFile("Meta/Template/source.md");
+
+    const app = {
+      metadataCache: {
+        resolvedLinks: { "Meta/Template/source.md": { "Core/target.md": 1 } },
+        getFileCache: vi.fn().mockReturnValue({ links: [{ link: "target" }] }),
+        getFirstLinkpathDest: vi.fn().mockReturnValue(target),
+      },
+      vault: {
+        getFileByPath: vi.fn().mockReturnValue(source),
+      },
+    };
+
+    const result = getBacklinkFiles(app as any, target as any, []);
+    expect(result).toHaveLength(1);
   });
 
   test("更新日時の新しい順に並ぶ", () => {

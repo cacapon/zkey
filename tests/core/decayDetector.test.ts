@@ -161,6 +161,45 @@ describe("updateDecayList", () => {
     expect(written).toContain("[[old]]");
   });
 
+  test("腐敗ノートに経過日数が表示される", async () => {
+    const rootFile = { path: "Temp/Temp.md", basename: "Temp" };
+    let written = "";
+    const app = {
+      vault: {
+        getFileByPath: vi.fn().mockReturnValue(rootFile),
+        read: vi.fn().mockResolvedValue("# Temp\n\n<!-- DECAY_START -->\n<!-- DECAY_END -->"),
+        modify: vi.fn().mockImplementation((_f: any, c: string) => { written = c; }),
+      },
+    };
+    vi.mocked(vaultQuery.getMdFiles).mockReturnValue([
+      fakeFile("Temp/old.md", 15 * DAY_MS),
+    ] as any);
+
+    await updateDecayList(app as any, settings);
+    expect(written).toContain("[[old]] (15日経過)");
+  });
+
+  test("古いものから順に並ぶ", async () => {
+    const rootFile = { path: "Temp/Temp.md", basename: "Temp" };
+    let written = "";
+    const app = {
+      vault: {
+        getFileByPath: vi.fn().mockReturnValue(rootFile),
+        read: vi.fn().mockResolvedValue("<!-- DECAY_START -->\n<!-- DECAY_END -->"),
+        modify: vi.fn().mockImplementation((_f: any, c: string) => { written = c; }),
+      },
+    };
+    vi.mocked(vaultQuery.getMdFiles).mockReturnValue([
+      fakeFile("Temp/newer.md", 20 * DAY_MS),
+      fakeFile("Temp/older.md", 30 * DAY_MS),
+    ] as any);
+
+    await updateDecayList(app as any, settings);
+    const olderPos = written.indexOf("[[older]]");
+    const newerPos = written.indexOf("[[newer]]");
+    expect(olderPos).toBeLessThan(newerPos);
+  });
+
   test("内容に変化がない場合はmodifyを呼ばない", async () => {
     const rootFile = { path: "Temp/Temp.md", basename: "Temp" };
     const emptySection = "# Temp\n\n<!-- DECAY_START -->\n<!-- DECAY_END -->";
