@@ -138,6 +138,18 @@ export class ZkSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl)
+      .setName("TempRoot テンプレートパス")
+      .addText((text) =>
+        text
+          .setPlaceholder("Meta/Template/zk-temp-root.md")
+          .setValue(this.plugin.settings.tempRootTemplatePath)
+          .onChange(async (value) => {
+            this.plugin.settings.tempRootTemplatePath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     // --- バックリンク ---
     containerEl.createEl("h3", { text: "バックリンク" });
 

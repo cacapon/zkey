@@ -7,6 +7,7 @@ import {
   loadOrCreateTemplate,
   DEFAULT_CORE_ROOT_TEMPLATE,
   DEFAULT_REF_ROOT_TEMPLATE,
+  DEFAULT_TEMP_ROOT_TEMPLATE,
 } from "../core/templateLoader";
 
 function getRootPath(mode: Mode, settings: ZkSettings): string {
@@ -21,7 +22,7 @@ function getRootTemplate(mode: Mode, settings: ZkSettings): { templatePath: stri
   switch (mode) {
     case "Core": return { templatePath: settings.coreRootTemplatePath, defaultContent: DEFAULT_CORE_ROOT_TEMPLATE };
     case "Ref":  return { templatePath: settings.refRootTemplatePath,  defaultContent: DEFAULT_REF_ROOT_TEMPLATE };
-    case "Temp": return null;
+    case "Temp": return { templatePath: settings.tempRootTemplatePath, defaultContent: DEFAULT_TEMP_ROOT_TEMPLATE };
   }
 }
 

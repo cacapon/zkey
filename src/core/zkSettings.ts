@@ -13,6 +13,7 @@ export interface ZkSettings {
   refNoteTemplatePath: string;
   coreRootTemplatePath: string;
   refRootTemplatePath: string;
+  tempRootTemplatePath: string;
 }
 
 export const DEFAULT_SETTINGS: ZkSettings = {
@@ -30,4 +31,5 @@ export const DEFAULT_SETTINGS: ZkSettings = {
   refNoteTemplatePath:  "Meta/Template/zk-ref-note.md",
   coreRootTemplatePath: "Meta/Template/zk-core-root.md",
   refRootTemplatePath:  "Meta/Template/zk-ref-root.md",
+  tempRootTemplatePath: "Meta/Template/zk-temp-root.md",
 };

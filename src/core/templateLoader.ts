@@ -53,6 +53,20 @@ export const DEFAULT_CORE_ROOT_TEMPLATE = `# Core
 <!-- ZK_BACKLINKS_END -->
 %%`;
 
+export const DEFAULT_TEMP_ROOT_TEMPLATE = `# Temp
+
+一時的なメモや思考の記録。
+Core（永続知識）やRef（外部参照）に昇華させるための中間ノート。
+
+## Tempノートとは
+- 思いついたアイデア・疑問・作業メモなど
+- 一定期間更新されないと「腐敗」として検出される
+- CoreまたはRefに転記したら削除してよい
+
+## 腐敗ノート（自動更新）
+<!-- DECAY_START -->
+<!-- DECAY_END -->`;
+
 export const DEFAULT_REF_ROOT_TEMPLATE = `# Ref
 
 外部情報（書籍・論文・記事など）への参照を記録するノート。
