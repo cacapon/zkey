@@ -7,6 +7,7 @@ export interface ZkSettings {
   aliasMinLen: number;
   bookSearchCommandId: string;
   enableBacklinks: boolean;
+  backlinkExcludePatterns: string[];
   enableDecayDetection: boolean;
   decayDays: number;
   coreNoteTemplatePath: string;
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: ZkSettings = {
   aliasMinLen: 4,
   bookSearchCommandId: "obsidian-book-search-plugin:open-book-search-dialog",
   enableBacklinks: true,
+  backlinkExcludePatterns: ["Meta/Template/**"],
   enableDecayDetection: true,
   decayDays: 14,
   coreNoteTemplatePath: "Meta/Template/zk-core-note.md",

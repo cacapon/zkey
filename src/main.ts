@@ -78,7 +78,7 @@ export default class ZkPlugin extends Plugin {
           updateDecayList(this.app, this.settings);
         }
         if (this.settings.enableBacklinks && isInCoreOrRef(file.path, this.settings)) {
-          await updateBacklinksOf(this.app, file);
+          await updateBacklinksOf(this.app, file, this.settings.backlinkExcludePatterns);
         }
       })
     );

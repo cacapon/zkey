@@ -77,7 +77,7 @@ async function createRefNote(
   const newFile = await app.vault.create(`${folderPath}/${uniqueTitle}.md`, content);
   await app.workspace.getLeaf().openFile(newFile);
   if (settings.enableBacklinks) {
-    await updateBacklinksOf(app, srcFile);
+    await updateBacklinksOf(app, srcFile, settings.backlinkExcludePatterns);
   }
 }
 

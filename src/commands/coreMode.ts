@@ -73,7 +73,7 @@ export async function createCoreNote(
   const newFile = await app.vault.create(path, content);
   await app.workspace.getLeaf().openFile(newFile);
   if (settings.enableBacklinks && parentFile instanceof TFile) {
-    await updateBacklinksOf(app, parentFile);
+    await updateBacklinksOf(app, parentFile, settings.backlinkExcludePatterns);
   }
 }
 

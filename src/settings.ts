@@ -179,6 +179,24 @@ export class ZkSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl)
+      .setName("Exclude path glob patterns")
+      .setDesc("バックリンクの対象外にするパスのglobパターン（1行1パターン）。**/*.png、**/attachments など")
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("Meta/Template/**\n**/attachments")
+          .setValue(this.plugin.settings.backlinkExcludePatterns.join("\n"))
+          .onChange(async (value) => {
+            this.plugin.settings.backlinkExcludePatterns = value
+              .split("\n")
+              .map((p) => p.trim())
+              .filter((p) => p.length > 0);
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 5;
+        text.inputEl.style.width = "100%";
+      });
+
     // --- 腐敗検知 ---
     containerEl.createEl("h3", { text: "Tempノート 腐敗検知" });
 
