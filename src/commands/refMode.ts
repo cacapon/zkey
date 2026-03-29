@@ -3,10 +3,10 @@ import { ZkSettings } from "../settings";
 import { getMdFiles } from "../core/vaultQuery";
 import { genUniqueID, genUniqueAlias } from "../core/idGenerator";
 import { collectIDs, collectAliases } from "../core/vaultQuery";
-import { buildRefNote } from "../core/refNoteTemplate";
 import { RefSuggestModal, RefSuggestItem } from "../ui/refSuggest";
 import { InputModal } from "../ui/inputModal";
 import { updateBacklinksOf } from "../core/backlinkUpdater";
+import { loadOrCreateTemplate, applyPlaceholders, DEFAULT_REF_NOTE_TEMPLATE } from "../core/templateLoader";
 
 function refFolderPath(settings: ZkSettings): string {
   return settings.refRootPath.substring(0, settings.refRootPath.lastIndexOf("/"));
@@ -55,7 +55,17 @@ async function createRefNote(
     id.slice(0, settings.aliasMinLen);
 
   const createdDate = new Date().toISOString().split("T")[0];
-  const content = buildRefNote({ id, alias, srcTitle: srcFile.basename, createdDate });
+  const template = await loadOrCreateTemplate(
+    app,
+    settings.refNoteTemplatePath,
+    DEFAULT_REF_NOTE_TEMPLATE
+  );
+  const content = applyPlaceholders(template, {
+    id,
+    alias,
+    created: createdDate,
+    src: srcFile.basename,
+  });
 
   // 同名ファイルの連番処理
   let uniqueTitle = title;

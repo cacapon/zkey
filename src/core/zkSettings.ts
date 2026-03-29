@@ -9,6 +9,10 @@ export interface ZkSettings {
   enableBacklinks: boolean;
   enableDecayDetection: boolean;
   decayDays: number;
+  coreNoteTemplatePath: string;
+  refNoteTemplatePath: string;
+  coreRootTemplatePath: string;
+  refRootTemplatePath: string;
 }
 
 export const DEFAULT_SETTINGS: ZkSettings = {
@@ -22,4 +26,8 @@ export const DEFAULT_SETTINGS: ZkSettings = {
   enableBacklinks: true,
   enableDecayDetection: true,
   decayDays: 14,
+  coreNoteTemplatePath: "Meta/Template/zk-core-note.md",
+  refNoteTemplatePath:  "Meta/Template/zk-ref-note.md",
+  coreRootTemplatePath: "Meta/Template/zk-core-root.md",
+  refRootTemplatePath:  "Meta/Template/zk-ref-root.md",
 };

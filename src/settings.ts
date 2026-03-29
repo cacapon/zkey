@@ -86,6 +86,58 @@ export class ZkSettingTab extends PluginSettingTab {
           })
       );
 
+    // --- テンプレート ---
+    containerEl.createEl("h3", { text: "ノートテンプレート" });
+    containerEl.createEl("p", { text: "指定ファイルが存在しない場合、初回作成時にデフォルトテンプレートを自動生成します。" });
+
+    new Setting(containerEl)
+      .setName("Coreノート テンプレートパス")
+      .addText((text) =>
+        text
+          .setPlaceholder("Meta/Template/zk-core-note.md")
+          .setValue(this.plugin.settings.coreNoteTemplatePath)
+          .onChange(async (value) => {
+            this.plugin.settings.coreNoteTemplatePath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Refノート テンプレートパス")
+      .addText((text) =>
+        text
+          .setPlaceholder("Meta/Template/zk-ref-note.md")
+          .setValue(this.plugin.settings.refNoteTemplatePath)
+          .onChange(async (value) => {
+            this.plugin.settings.refNoteTemplatePath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("CoreRoot テンプレートパス")
+      .addText((text) =>
+        text
+          .setPlaceholder("Meta/Template/zk-core-root.md")
+          .setValue(this.plugin.settings.coreRootTemplatePath)
+          .onChange(async (value) => {
+            this.plugin.settings.coreRootTemplatePath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("RefRoot テンプレートパス")
+      .addText((text) =>
+        text
+          .setPlaceholder("Meta/Template/zk-ref-root.md")
+          .setValue(this.plugin.settings.refRootTemplatePath)
+          .onChange(async (value) => {
+            this.plugin.settings.refRootTemplatePath = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     // --- バックリンク ---
     containerEl.createEl("h3", { text: "バックリンク" });
 

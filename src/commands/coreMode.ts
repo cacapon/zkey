@@ -2,9 +2,9 @@ import { App, TFile } from "obsidian";
 import { ZkSettings } from "../settings";
 import { genUniqueID, genUniqueAlias } from "../core/idGenerator";
 import { collectIDs, collectAliases } from "../core/vaultQuery";
-import { buildCoreNote } from "../core/noteTemplate";
 import { getLinkAtCursor } from "../core/editorUtils";
 import { updateBacklinksOf } from "../core/backlinkUpdater";
+import { loadOrCreateTemplate, applyPlaceholders, DEFAULT_CORE_NOTE_TEMPLATE } from "../core/templateLoader";
 
 export function coreFolderPath(settings: ZkSettings): string {
   const p = settings.coreRootPath;
@@ -30,7 +30,18 @@ async function buildNewCoreNote(
 
   const parentTitle = app.workspace.getActiveFile()?.basename ?? "HOME";
   const createdDate = new Date().toISOString().split("T")[0];
-  const content = buildCoreNote({ id, alias, parentTitle, createdDate });
+
+  const template = await loadOrCreateTemplate(
+    app,
+    settings.coreNoteTemplatePath,
+    DEFAULT_CORE_NOTE_TEMPLATE
+  );
+  const content = applyPlaceholders(template, {
+    id,
+    alias,
+    created: createdDate,
+    parent: parentTitle,
+  });
   const path = `${folderPath}/${title}.md`;
 
   return { content, path };

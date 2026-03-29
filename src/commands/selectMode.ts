@@ -3,6 +3,11 @@ import { Mode } from "../core/mode";
 import { ModePathStore } from "../core/modePathStore";
 import { ModeSuggestModal } from "../ui/modeSuggest";
 import { ZkSettings } from "../settings";
+import {
+  loadOrCreateTemplate,
+  DEFAULT_CORE_ROOT_TEMPLATE,
+  DEFAULT_REF_ROOT_TEMPLATE,
+} from "../core/templateLoader";
 
 function getRootPath(mode: Mode, settings: ZkSettings): string {
   switch (mode) {
@@ -12,18 +17,32 @@ function getRootPath(mode: Mode, settings: ZkSettings): string {
   }
 }
 
-async function openOrCreateNote(app: App, path: string): Promise<void> {
+function getRootTemplate(mode: Mode, settings: ZkSettings): { templatePath: string; defaultContent: string } | null {
+  switch (mode) {
+    case "Core": return { templatePath: settings.coreRootTemplatePath, defaultContent: DEFAULT_CORE_ROOT_TEMPLATE };
+    case "Ref":  return { templatePath: settings.refRootTemplatePath,  defaultContent: DEFAULT_REF_ROOT_TEMPLATE };
+    case "Temp": return null;
+  }
+}
+
+async function openOrCreateNote(
+  app: App,
+  path: string,
+  templateConfig: { templatePath: string; defaultContent: string } | null
+): Promise<void> {
   const existing = app.vault.getFileByPath(path);
   if (existing) {
     await app.workspace.getLeaf().openFile(existing);
     return;
   }
-  // フォルダが存在しない場合は作成
   const dir = path.substring(0, path.lastIndexOf("/"));
   if (dir && !app.vault.getFolderByPath(dir)) {
     await app.vault.createFolder(dir);
   }
-  const newFile = await app.vault.create(path, "");
+  const content = templateConfig
+    ? await loadOrCreateTemplate(app, templateConfig.templatePath, templateConfig.defaultContent)
+    : "";
+  const newFile = await app.vault.create(path, content);
   await app.workspace.getLeaf().openFile(newFile);
 }
 
@@ -44,7 +63,7 @@ export async function selectModeCommand(
     } else {
       // 存在しない → rootノートにフォールバック
       const rootPath = getRootPath(mode, settings);
-      await openOrCreateNote(app, rootPath);
+      await openOrCreateNote(app, rootPath, getRootTemplate(mode, settings));
       store.setPath(mode, rootPath);
     }
   }).open();
