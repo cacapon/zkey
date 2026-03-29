@@ -1,7 +1,7 @@
 import { App } from "obsidian";
 
 export const DEFAULT_CORE_NOTE_TEMPLATE = `---
-created: {{created}}
+created: "{{created}}"
 id: "{{id}}"
 aliases:
   - "{{alias}}"
@@ -19,7 +19,7 @@ tags:
 %%`;
 
 export const DEFAULT_REF_NOTE_TEMPLATE = `---
-created: {{created}}
+created: "{{created}}"
 id: "{{id}}"
 aliases:
   - "{{alias}}"
