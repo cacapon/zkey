@@ -8,6 +8,7 @@ import { mainActionCommand } from "./commands/mainAction";
 import { updateModeStatusBar } from "./ui/statusBar";
 import { updateDecayList } from "./core/decayDetector";
 import { updateBacklinksOf, isInCoreOrRef } from "./core/backlinkUpdater";
+import { initializeCommand } from "./commands/initializeCommand";
 
 export default class ZkPlugin extends Plugin {
   settings!: ZkSettings;
@@ -58,6 +59,14 @@ export default class ZkPlugin extends Plugin {
       name: "Ref: Srcを選んでRefノートを作成",
       callback: () => {
         refModeCommand(this.app, this.settings);
+      },
+    });
+
+    this.addCommand({
+      id: "initialize",
+      name: "テンプレートとルートノートを初期化する",
+      callback: () => {
+        initializeCommand(this.app, this.settings);
       },
     });
 

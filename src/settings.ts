@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import type ZkPlugin from "./main";
+import { initializeCommand } from "./commands/initializeCommand";
 
 export { ZkSettings, DEFAULT_SETTINGS } from "./core/zkSettings";
 import type { ZkSettings } from "./core/zkSettings";
@@ -17,6 +18,19 @@ export class ZkSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     containerEl.createEl("h2", { text: "Zk 設定" });
+
+    // --- 初期化 ---
+    new Setting(containerEl)
+      .setName("テンプレートとルートノートを初期化")
+      .setDesc("テンプレートファイルを作成（既存はスキップ）し、ルートノートをデフォルト内容にリセットします")
+      .addButton((btn) =>
+        btn
+          .setButtonText("初期化する")
+          .setWarning()
+          .onClick(() => {
+            initializeCommand(this.plugin.app, this.plugin.settings);
+          })
+      );
 
     // --- モードのルートパス ---
     containerEl.createEl("h3", { text: "モードのルートノート" });
