@@ -1,79 +1,41 @@
 import { App, TFile } from "obsidian";
-import { Mode } from "../core/mode";
+import { ModeDefinition, ZkSettings } from "../core/zkSettings";
 import { ModePathStore } from "../core/modePathStore";
 import { ModeSuggestModal } from "../ui/modeSuggest";
-import { ZkSettings } from "../settings";
-import {
-  loadOrCreateTemplate,
-  applyPlaceholders,
-  DEFAULT_CORE_ROOT_TEMPLATE,
-  DEFAULT_REF_ROOT_TEMPLATE,
-  DEFAULT_TEMP_ROOT_TEMPLATE,
-} from "../core/templateLoader";
 
-function getRootPath(mode: Mode, settings: ZkSettings): string {
-  switch (mode) {
-    case "Core": return settings.coreRootPath;
-    case "Ref":  return settings.refRootPath;
-    case "Temp": return settings.tempRootPath;
-  }
-}
-
-function rootBasename(rootPath: string): string {
-  return rootPath.split("/").pop()!.replace(/\.md$/, "");
-}
-
-function getRootTemplate(mode: Mode, settings: ZkSettings): { templatePath: string; defaultContent: string } | null {
-  switch (mode) {
-    case "Core": return { templatePath: settings.coreRootTemplatePath, defaultContent: DEFAULT_CORE_ROOT_TEMPLATE };
-    case "Ref":  return {
-      templatePath: settings.refRootTemplatePath,
-      defaultContent: applyPlaceholders(DEFAULT_REF_ROOT_TEMPLATE, { srcRoot: rootBasename(settings.srcRootPath) }),
-    };
-    case "Temp": return { templatePath: settings.tempRootTemplatePath, defaultContent: DEFAULT_TEMP_ROOT_TEMPLATE };
-  }
-}
-
-async function openOrCreateNote(
-  app: App,
-  path: string,
-  templateConfig: { templatePath: string; defaultContent: string } | null
-): Promise<void> {
-  const existing = app.vault.getFileByPath(path);
-  if (existing) {
+async function openOrCreateRootNote(app: App, mode: ModeDefinition): Promise<void> {
+  const folderName = mode.folder.split("/").pop() ?? mode.folder;
+  const rootPath = `${mode.folder}/${folderName}.md`;
+  const existing = app.vault.getFileByPath(rootPath);
+  if (existing instanceof TFile) {
     await app.workspace.getLeaf().openFile(existing);
     return;
   }
-  const dir = path.substring(0, path.lastIndexOf("/"));
-  if (dir && !app.vault.getFolderByPath(dir)) {
-    await app.vault.createFolder(dir);
+  if (!app.vault.getFolderByPath(mode.folder)) {
+    await app.vault.createFolder(mode.folder);
   }
-  const content = templateConfig
-    ? await loadOrCreateTemplate(app, templateConfig.templatePath, templateConfig.defaultContent)
-    : "";
-  const newFile = await app.vault.create(path, content);
+  const newFile = await app.vault.create(rootPath, "");
   await app.workspace.getLeaf().openFile(newFile);
 }
 
 export async function selectModeCommand(
   app: App,
   store: ModePathStore,
-  settings: ZkSettings
+  settings: ZkSettings,
+  onCreateNew?: () => void
 ): Promise<void> {
-  new ModeSuggestModal(app, async (mode: Mode) => {
+  new ModeSuggestModal(app, settings.modes, async (mode: ModeDefinition) => {
     store.setActiveMode(mode);
 
-    const currentPath = store.getPath(mode);
+    const currentPath = store.getPath(mode.id);
     const currentFile = app.vault.getFileByPath(currentPath);
 
     if (currentFile instanceof TFile) {
-      // 現在のパスのノートが存在する → 開く
       await app.workspace.getLeaf().openFile(currentFile);
     } else {
-      // 存在しない → rootノートにフォールバック
-      const rootPath = getRootPath(mode, settings);
-      await openOrCreateNote(app, rootPath, getRootTemplate(mode, settings));
-      store.setPath(mode, rootPath);
+      await openOrCreateRootNote(app, mode);
+      const fn = mode.folder.split("/").pop() ?? mode.folder;
+      store.setPath(mode.id, `${mode.folder}/${fn}.md`);
     }
-  }).open();
+  }, onCreateNew).open();
 }

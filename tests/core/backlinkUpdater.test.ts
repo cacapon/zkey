@@ -1,50 +1,49 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import {
-  isInCoreOrRef,
+  isInAnyMode,
   getBacklinkFiles,
   buildBacklinkSection,
   updateBacklinksOf,
 } from "../../src/core/backlinkUpdater";
-import { DEFAULT_SETTINGS } from "../../src/core/zkSettings";
+import { ModeDefinition } from "../../src/core/zkSettings";
 import { TFile } from "../../tests/__mocks__/obsidian";
 
-const settings = {
-  ...DEFAULT_SETTINGS,
-  coreRootPath: "Core/Core.md",
-  refRootPath: "Ref/Ref.md",
-};
+const modes: ModeDefinition[] = [
+  { id: "core", name: "Core", folder: "Core", idPrefix: "C", color: "#4ade80", templatePath: "Meta/Template/zk-core-note.md" },
+  { id: "ref",  name: "Ref",  folder: "Ref",  idPrefix: "R", color: "#38bdf8", templatePath: "Meta/Template/zk-ref-note.md" },
+];
 
 function fakeFile(path: string, mtime = 1000): TFile {
   return new TFile(path, mtime);
 }
 
 // =========================================================
-// isInCoreOrRef
+// isInAnyMode
 // =========================================================
 
-describe("isInCoreOrRef", () => {
+describe("isInAnyMode", () => {
   test("Coreフォルダ内のパスはtrueを返す", () => {
-    expect(isInCoreOrRef("Core/someNote.md", settings)).toBe(true);
+    expect(isInAnyMode("Core/someNote.md", modes)).toBe(true);
   });
 
   test("Refフォルダ内のパスはtrueを返す", () => {
-    expect(isInCoreOrRef("Ref/someNote.md", settings)).toBe(true);
+    expect(isInAnyMode("Ref/someNote.md", modes)).toBe(true);
   });
 
-  test("どちらでもないパスはfalseを返す", () => {
-    expect(isInCoreOrRef("Temp/note.md", settings)).toBe(false);
-    expect(isInCoreOrRef("Other/note.md", settings)).toBe(false);
+  test("どのモードにも属さないパスはfalseを返す", () => {
+    expect(isInAnyMode("Temp/note.md", modes)).toBe(false);
+    expect(isInAnyMode("Other/note.md", modes)).toBe(false);
   });
 
   test("フォルダ名の前方一致では誤判定しない", () => {
-    expect(isInCoreOrRef("CoreExtra/note.md", settings)).toBe(false);
+    expect(isInAnyMode("CoreExtra/note.md", modes)).toBe(false);
   });
 
   test("除外パターンにマッチするパスはfalseを返す", () => {
-    const s = { ...settings, backlinkExcludePatterns: ["Meta/Template/**"] };
-    expect(isInCoreOrRef("Core/note.md", s)).toBe(true);
-    const sWithCore = { ...s, coreRootPath: "Meta/Template/Core.md" };
-    expect(isInCoreOrRef("Meta/Template/note.md", sWithCore)).toBe(false);
+    const templateModes: ModeDefinition[] = [
+      { id: "meta", name: "Meta", folder: "Meta/Template", idPrefix: "M", color: "#fff", templatePath: "" },
+    ];
+    expect(isInAnyMode("Meta/Template/note.md", templateModes, ["Meta/Template/**"])).toBe(false);
   });
 });
 

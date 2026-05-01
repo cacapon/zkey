@@ -1,41 +1,41 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { Mode } from "../../src/core/mode";
+import { ModeDefinition } from "../../src/core/zkSettings";
 import { ModePathStore } from "../../src/core/modePathStore";
 
-describe("ModePathStore", () => {
-  const defaultPaths = {
-    Core: "/zk/core",
-    Ref: "/zk/ref",
-    Temp: "/zk/temp",
-  };
+const coreDef: ModeDefinition = { id: "core", name: "Core", folder: "Core", idPrefix: "C", color: "#4ade80", templatePath: "" };
+const refDef:  ModeDefinition = { id: "ref",  name: "Ref",  folder: "Ref",  idPrefix: "R", color: "#38bdf8", templatePath: "" };
+const tempDef: ModeDefinition = { id: "temp", name: "Temp", folder: "Temp", idPrefix: "T", color: "#facc15", templatePath: "" };
 
+const defaultModes = [coreDef, refDef, tempDef];
+
+describe("ModePathStore", () => {
   let store: ModePathStore;
 
   beforeEach(() => {
-    store = new ModePathStore(defaultPaths);
+    store = new ModePathStore(defaultModes);
   });
 
   test("初期状態でデフォルトパスが返る", () => {
-    expect(store.getPath("Core")).toBe("/zk/core");
-    expect(store.getPath("Ref")).toBe("/zk/ref");
-    expect(store.getPath("Temp")).toBe("/zk/temp");
+    expect(store.getPath("core")).toBe("Core/Core.md");
+    expect(store.getPath("ref")).toBe("Ref/Ref.md");
+    expect(store.getPath("temp")).toBe("Temp/Temp.md");
   });
 
   test("setPathで更新したパスが返る", () => {
-    store.setPath("Core", "/zk/core/newNote.md");
-    expect(store.getPath("Core")).toBe("/zk/core/newNote.md");
+    store.setPath("core", "Core/newNote.md");
+    expect(store.getPath("core")).toBe("Core/newNote.md");
   });
 
   test("あるモードを更新しても他のモードに影響しない", () => {
-    store.setPath("Core", "/zk/core/newNote.md");
-    expect(store.getPath("Ref")).toBe("/zk/ref");
-    expect(store.getPath("Temp")).toBe("/zk/temp");
+    store.setPath("core", "Core/newNote.md");
+    expect(store.getPath("ref")).toBe("Ref/Ref.md");
+    expect(store.getPath("temp")).toBe("Temp/Temp.md");
   });
 
   test("同じモードを複数回setPathしても最後の値が返る", () => {
-    store.setPath("Temp", "/zk/tmp/a.md");
-    store.setPath("Temp", "/zk/tmp/b.md");
-    expect(store.getPath("Temp")).toBe("/zk/tmp/b.md");
+    store.setPath("temp", "Temp/a.md");
+    store.setPath("temp", "Temp/b.md");
+    expect(store.getPath("temp")).toBe("Temp/b.md");
   });
 });
 
@@ -43,11 +43,7 @@ describe("ModePathStore - アクティブモード", () => {
   let store: ModePathStore;
 
   beforeEach(() => {
-    store = new ModePathStore({
-      Core: "/zk/core",
-      Ref: "/zk/ref",
-      Temp: "/zk/temp",
-    });
+    store = new ModePathStore(defaultModes);
   });
 
   test("初期状態のアクティブモードはnull", () => {
@@ -55,21 +51,21 @@ describe("ModePathStore - アクティブモード", () => {
   });
 
   test("setActiveModeで設定したモードが返る", () => {
-    store.setActiveMode("Core");
-    expect(store.getActiveMode()).toBe("Core");
+    store.setActiveMode(coreDef);
+    expect(store.getActiveMode()?.id).toBe("core");
   });
 
   test("setActiveModeで別のモードに切り替えられる", () => {
-    store.setActiveMode("Core");
-    store.setActiveMode("Ref");
-    expect(store.getActiveMode()).toBe("Ref");
+    store.setActiveMode(coreDef);
+    store.setActiveMode(refDef);
+    expect(store.getActiveMode()?.id).toBe("ref");
   });
 
   test("onActiveModeChangeのコールバックがsetActiveMode時に呼ばれる", () => {
     const calls: (string | null)[] = [];
-    store.onActiveModeChange((mode) => calls.push(mode));
-    store.setActiveMode("Core");
-    store.setActiveMode("Temp");
-    expect(calls).toEqual(["Core", "Temp"]);
+    store.onActiveModeChange((mode) => calls.push(mode?.id ?? null));
+    store.setActiveMode(coreDef);
+    store.setActiveMode(tempDef);
+    expect(calls).toEqual(["core", "temp"]);
   });
 });

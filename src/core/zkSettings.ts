@@ -1,41 +1,28 @@
+export interface ModeDefinition {
+  id: string;          // スラッグ（例: "core", "diary"）
+  name: string;        // 表示名（例: "Core"）
+  folder: string;      // フォルダ名（例: "Core"）
+  idPrefix: string;    // IDプレフィックス（例: "C"）
+  color: string;       // ステータスバーの色（例: "#4ade80"）
+  templatePath: string;// ノートテンプレートのパス
+}
+
 export interface ZkSettings {
-  coreRootPath: string;
-  refRootPath: string;
-  srcRootPath: string;
-  tempRootPath: string;
+  modes: ModeDefinition[];
+  defaultModeFolder: string;     // モードフォルダのデフォルト親（例: "" or "Notes"）
+  defaultTemplateFolder: string; // テンプレートのデフォルトフォルダ（例: "Meta/Template"）
   idLen: number;
   aliasMinLen: number;
-  bookSearchCommandId: string;
   enableBacklinks: boolean;
   backlinkExcludePatterns: string[];
-  enableDecayDetection: boolean;
-  decayDays: number;
-  coreNoteTemplatePath: string;
-  refNoteTemplatePath: string;
-  srcNoteTemplatePath: string;
-  coreRootTemplatePath: string;
-  refRootTemplatePath: string;
-  srcRootTemplatePath: string;
-  tempRootTemplatePath: string;
 }
 
 export const DEFAULT_SETTINGS: ZkSettings = {
-  coreRootPath: "Core/Core.md",
-  refRootPath: "Ref/Ref.md",
-  srcRootPath: "Src/Src.md",
-  tempRootPath: "Temp/Temp.md",
+  modes: [],
+  defaultModeFolder: "",
+  defaultTemplateFolder: "Meta/Template",
   idLen: 15,
   aliasMinLen: 4,
-  bookSearchCommandId: "obsidian-book-search-plugin:open-book-search-dialog",
   enableBacklinks: true,
   backlinkExcludePatterns: ["Meta/Template/**"],
-  enableDecayDetection: true,
-  decayDays: 14,
-  coreNoteTemplatePath: "Meta/Template/zk-core-note.md",
-  refNoteTemplatePath:  "Meta/Template/zk-ref-note.md",
-  srcNoteTemplatePath:  "Meta/Template/zk-src-note.md",
-  coreRootTemplatePath: "Meta/Template/zk-core-root.md",
-  refRootTemplatePath:  "Meta/Template/zk-ref-root.md",
-  srcRootTemplatePath:  "Meta/Template/zk-src-root.md",
-  tempRootTemplatePath: "Meta/Template/zk-temp-root.md",
 };

@@ -1,34 +1,52 @@
 import { SuggestModal, App } from "obsidian";
-import { Mode } from "../core/mode";
+import { ModeDefinition } from "../core/zkSettings";
 
-interface ModeItem {
-  mode: Mode;
-  label: string;
-}
-
-const MODE_ITEMS: ModeItem[] = [
-  { mode: "Core", label: "CORE" },
-  { mode: "Temp", label: "TMP" },
-  { mode: "Ref",  label: "REF" },
-];
+type ModeItem =
+  | { type: "mode"; def: ModeDefinition }
+  | { type: "create" };
 
 export class ModeSuggestModal extends SuggestModal<ModeItem> {
-  private onSelect: (mode: Mode) => void;
+  private modes: ModeDefinition[];
+  private onSelect: (mode: ModeDefinition) => void;
+  private onCreateNew?: () => void;
 
-  constructor(app: App, onSelect: (mode: Mode) => void) {
+  constructor(
+    app: App,
+    modes: ModeDefinition[],
+    onSelect: (mode: ModeDefinition) => void,
+    onCreateNew?: () => void
+  ) {
     super(app);
+    this.modes = modes;
     this.onSelect = onSelect;
+    this.onCreateNew = onCreateNew;
   }
 
-  getSuggestions(): ModeItem[] {
-    return MODE_ITEMS;
+  getSuggestions(query: string): ModeItem[] {
+    const q = query.toLowerCase();
+    const filtered: ModeItem[] = this.modes
+      .filter((m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q))
+      .map((def) => ({ type: "mode", def }));
+
+    if (this.onCreateNew) {
+      filtered.push({ type: "create" });
+    }
+    return filtered;
   }
 
   renderSuggestion(item: ModeItem, el: HTMLElement): void {
-    el.createEl("div", { text: item.label });
+    if (item.type === "create") {
+      el.createEl("div", { text: "+ 新規モードを追加" });
+    } else {
+      el.createEl("div", { text: item.def.name });
+    }
   }
 
   onChooseSuggestion(item: ModeItem): void {
-    this.onSelect(item.mode);
+    if (item.type === "create") {
+      this.onCreateNew?.();
+    } else {
+      this.onSelect(item.def);
+    }
   }
 }

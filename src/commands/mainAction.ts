@@ -1,66 +1,85 @@
 import { App, Editor, Notice, TFile } from "obsidian";
-import { Mode } from "../core/mode";
-import { ZkSettings } from "../settings";
+import { ModeDefinition, ZkSettings } from "../core/zkSettings";
 import { ModePathStore } from "../core/modePathStore";
 import { getLinkAtCursor } from "../core/editorUtils";
 import { detectModeFromPath } from "../core/modeDetector";
 import { ModeSuggestModal } from "../ui/modeSuggest";
-import { createCoreNote } from "./coreMode";
-import { refModeCommand } from "./refMode";
-import { createTempNote, openOrCreateTempNote } from "./tempMode";
+import { genUniqueID, genUniqueAlias } from "../core/idGenerator";
+import { collectIDs, collectAliases } from "../core/vaultQuery";
+import { updateBacklinksOf } from "../core/backlinkUpdater";
+import { loadOrCreateTemplate, applyPlaceholders, DEFAULT_NOTE_TEMPLATE } from "../core/templateLoader";
+
+// 同名ファイルが存在する場合、"title 2", "title 3" と連番で一意なタイトルを返す
+function resolveUniqueTitle(app: App, folder: string, title: string): string {
+  if (!app.vault.getFileByPath(`${folder}/${title}.md`)) return title;
+  let n = 2;
+  while (app.vault.getFileByPath(`${folder}/${title} ${n}.md`)) n++;
+  return `${title} ${n}`;
+}
+
+async function createNote(
+  app: App,
+  settings: ZkSettings,
+  mode: ModeDefinition,
+  title: string
+): Promise<void> {
+  const parentFile = app.workspace.getActiveFile();
+
+  if (!app.vault.getFolderByPath(mode.folder)) {
+    try {
+      await app.vault.createFolder(mode.folder);
+    } catch {
+      // 競合などで既に存在している場合は無視
+    }
+  }
+
+  const uniqueTitle = resolveUniqueTitle(app, mode.folder, title);
+  const id = genUniqueID(mode.idPrefix, settings.idLen, collectIDs(app, mode.folder));
+  const alias =
+    genUniqueAlias(id, settings.aliasMinLen, collectAliases(app, mode.folder)) ??
+    id.slice(0, settings.aliasMinLen);
+  const created = new Date().toISOString().split("T")[0];
+  const parent = parentFile?.basename ?? mode.folder;
+
+  const template = await loadOrCreateTemplate(app, mode.templatePath, DEFAULT_NOTE_TEMPLATE);
+  const content = applyPlaceholders(template, { id, alias, created, parent });
+  const path = `${mode.folder}/${uniqueTitle}.md`;
+
+  const newFile = await app.vault.create(path, content);
+  await app.workspace.getLeaf().openFile(newFile);
+
+  if (settings.enableBacklinks && parentFile instanceof TFile) {
+    await updateBacklinksOf(app, parentFile, settings.backlinkExcludePatterns);
+  }
+}
 
 async function executeAction(
   app: App,
   editor: Editor,
-  mode: Mode,
+  mode: ModeDefinition,
   settings: ZkSettings
 ): Promise<void> {
   const link = getLinkAtCursor(editor);
   const selection = editor.getSelection();
   const target = link?.target ?? selection ?? null;
 
-  // ターゲットなし → モード別の空ノートを作成
   if (!target) {
-    switch (mode) {
-      case "Core":
-        await createCoreNote(app, settings, "NewCore");
-        break;
-      case "Ref":
-        await refModeCommand(app, settings);
-        break;
-      case "Temp":
-        await createTempNote(app, settings, "NewTemp");
-        break;
-    }
+    await createNote(app, settings, mode, "New");
     return;
   }
 
-  // ファイルの存在確認
   const sourcePath = app.workspace.getActiveFile()?.path ?? "";
   const existing = app.metadataCache.getFirstLinkpathDest(target, sourcePath);
 
   if (existing instanceof TFile) {
-    // Ref以外: 選択テキストを [[]] で囲んでから移動
-    if (mode !== "Ref" && !link && selection) editor.replaceSelection(`[[${selection}]]`);
+    if (!link && selection) editor.replaceSelection(`[[${selection}]]`);
     await app.workspace.getLeaf().openFile(existing);
     return;
   }
 
-  // 存在しない → アクティブモードで作成
-  switch (mode) {
-    case "Core":
-      if (!link && selection) editor.replaceSelection(`[[${selection}]]`);
-      await createCoreNote(app, settings, target);
-      break;
-    case "Ref":
-      // Refはエディタを変更せずサジェストフローへ
-      await refModeCommand(app, settings);
-      break;
-    case "Temp":
-      if (!link && selection) editor.replaceSelection(`[[${selection}]]`);
-      await openOrCreateTempNote(app, settings, target);
-      break;
-  }
+  // 存在しない → 新規作成
+  if (!link && selection) editor.replaceSelection(`[[${selection}]]`);
+  await createNote(app, settings, mode, target);
 }
 
 export async function mainActionCommand(
@@ -71,10 +90,15 @@ export async function mainActionCommand(
   const editor = app.workspace.activeEditor?.editor;
   if (!editor) return;
 
+  if (settings.modes.length === 0) {
+    new Notice("モードがありません。先にモードを作成してください");
+    return;
+  }
+
   // 現在のファイルのパスからモードを自動判定
   const currentFile = app.workspace.getActiveFile();
   const detectedMode = currentFile
-    ? detectModeFromPath(currentFile.path, settings)
+    ? detectModeFromPath(currentFile.path, settings.modes)
     : null;
 
   if (detectedMode) {
@@ -91,8 +115,8 @@ export async function mainActionCommand(
   }
 
   // どちらもない → モード選択モーダルを開いて続行
-  new ModeSuggestModal(app, async (selectedMode) => {
-    store.setActiveMode(selectedMode);
-    await executeAction(app, editor, selectedMode, settings);
+  new ModeSuggestModal(app, settings.modes, async (selected) => {
+    store.setActiveMode(selected);
+    await executeAction(app, editor, selected, settings);
   }).open();
 }

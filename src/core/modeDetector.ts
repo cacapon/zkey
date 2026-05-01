@@ -1,23 +1,12 @@
-import { Mode } from "./mode";
-import { ZkSettings } from "./zkSettings";
-
-function folderPath(rootNotePath: string): string {
-  return rootNotePath.substring(0, rootNotePath.lastIndexOf("/"));
-}
+import { ModeDefinition } from "./zkSettings";
 
 // ファイルパスからモードを判定する。どのモードにも属さない場合はnullを返す。
 export function detectModeFromPath(
   filePath: string,
-  settings: ZkSettings
-): Mode | null {
-  const folders: [Mode, string][] = [
-    ["Core", folderPath(settings.coreRootPath)],
-    ["Ref",  folderPath(settings.refRootPath)],
-    ["Ref",  folderPath(settings.srcRootPath)],  // SrcフォルダもRefモードとして扱う
-    ["Temp", folderPath(settings.tempRootPath)],
-  ];
-
-  for (const [mode, folder] of folders) {
+  modes: ModeDefinition[]
+): ModeDefinition | null {
+  for (const mode of modes) {
+    const folder = mode.folder;
     if (filePath === folder || filePath.startsWith(folder + "/")) {
       return mode;
     }

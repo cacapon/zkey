@@ -1,5 +1,5 @@
 import { App, TFile } from "obsidian";
-import { ZkSettings } from "./zkSettings";
+import { ModeDefinition } from "./zkSettings";
 
 function globToRegex(pattern: string): RegExp {
   const escaped = pattern
@@ -16,18 +16,10 @@ function isExcluded(path: string, patterns: string[]): boolean {
 const BL_START = "<!-- ZK_BACKLINKS_START -->";
 const BL_END = "<!-- ZK_BACKLINKS_END -->";
 
-function folderOf(rootPath: string): string {
-  return rootPath.substring(0, rootPath.lastIndexOf("/"));
-}
-
-export function isInCoreOrRef(path: string, settings: ZkSettings): boolean {
-  const coreFolder = folderOf(settings.coreRootPath);
-  const refFolder = folderOf(settings.refRootPath);
-  const inCoreOrRef =
-    path === coreFolder || path.startsWith(coreFolder + "/") ||
-    path === refFolder  || path.startsWith(refFolder + "/");
-  if (!inCoreOrRef) return false;
-  return !isExcluded(path, settings.backlinkExcludePatterns);
+// ファイルパスがいずれかのモードのフォルダ内にあるか
+export function isInAnyMode(path: string, modes: ModeDefinition[], excludePatterns: string[] = []): boolean {
+  if (isExcluded(path, excludePatterns)) return false;
+  return modes.some((m) => path === m.folder || path.startsWith(m.folder + "/"));
 }
 
 // ファイルへの非埋め込み（通常の [[]] のみ）バックリンクを持つファイルを返す

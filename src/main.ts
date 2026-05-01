@@ -2,15 +2,12 @@ import { Plugin } from "obsidian";
 import { ZkSettings, DEFAULT_SETTINGS, ZkSettingTab } from "./settings";
 import { ModePathStore } from "./core/modePathStore";
 import { selectModeCommand } from "./commands/selectMode";
-import { coreModeCommand } from "./commands/coreMode";
-import { refModeCommand } from "./commands/refMode";
 import { mainActionCommand } from "./commands/mainAction";
+import { createModeCommand } from "./commands/createMode";
+import { deleteModeCommand } from "./commands/deleteMode";
 import { updateModeStatusBar } from "./ui/statusBar";
-import { updateDecayList } from "./core/decayDetector";
-import { updateBacklinksOf, isInCoreOrRef } from "./core/backlinkUpdater";
-import { assignSrcIdIfMissing, isInSrc } from "./core/srcIdAssigner";
+import { updateBacklinksOf, isInAnyMode } from "./core/backlinkUpdater";
 import { detectModeFromPath } from "./core/modeDetector";
-import { initializeCommand } from "./commands/initializeCommand";
 import { goUpCommand } from "./commands/goUpCommand";
 
 export default class ZkPlugin extends Plugin {
@@ -20,11 +17,7 @@ export default class ZkPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    this.modePathStore = new ModePathStore({
-      Core: this.settings.coreRootPath,
-      Ref:  this.settings.refRootPath,
-      Temp: this.settings.tempRootPath,
-    });
+    this.modePathStore = new ModePathStore(this.settings.modes);
 
     const statusBarItem = this.addStatusBarItem();
     this.modePathStore.onActiveModeChange((mode) => {
@@ -34,42 +27,36 @@ export default class ZkPlugin extends Plugin {
     this.addSettingTab(new ZkSettingTab(this.app, this));
 
     this.addCommand({
-      id: "select-mode",
-      name: "モードを選択する",
+      id: "create-mode",
+      name: "モードを作成する",
       callback: () => {
-        selectModeCommand(this.app, this.modePathStore, this.settings);
+        createModeCommand(this.app, this);
       },
     });
 
     this.addCommand({
-      id: "core-mode",
-      name: "Core: ノートを作成・開く",
-      editorCallback: () => {
-        coreModeCommand(this.app, this.settings);
+      id: "delete-mode",
+      name: "モードを削除する",
+      callback: () => {
+        deleteModeCommand(this.app, this);
+      },
+    });
+
+    this.addCommand({
+      id: "select-mode",
+      name: "モードを選択する",
+      callback: () => {
+        selectModeCommand(this.app, this.modePathStore, this.settings, () => {
+          createModeCommand(this.app, this);
+        });
       },
     });
 
     this.addCommand({
       id: "main-action",
-      name: "メインアクション（移動 / モード別作成）",
+      name: "メインアクション（移動 / ノート作成）",
       editorCallback: () => {
         mainActionCommand(this.app, this.modePathStore, this.settings);
-      },
-    });
-
-    this.addCommand({
-      id: "ref-mode",
-      name: "Ref: Srcを選んでRefノートを作成",
-      callback: () => {
-        refModeCommand(this.app, this.settings);
-      },
-    });
-
-    this.addCommand({
-      id: "initialize",
-      name: "テンプレートとルートノートを初期化する",
-      callback: () => {
-        initializeCommand(this.app, this.settings);
       },
     });
 
@@ -87,24 +74,23 @@ export default class ZkPlugin extends Plugin {
         if (!file) return;
 
         // モードのアクティブパスを更新
-        const detectedMode = detectModeFromPath(file.path, this.settings);
+        const detectedMode = detectModeFromPath(file.path, this.settings.modes);
         if (detectedMode) {
-          this.modePathStore.setPath(detectedMode, file.path);
+          this.modePathStore.setPath(detectedMode.id, file.path);
         }
 
-        if (file.path === this.settings.tempRootPath) {
-          await updateDecayList(this.app, this.settings);
-        }
-        if (this.settings.enableBacklinks && (
-          isInCoreOrRef(file.path, this.settings) ||
-          isInSrc(file.path, this.settings) ||
-          file.path === this.settings.srcRootPath ||
-          file.path === this.settings.tempRootPath
-        )) {
-          await updateBacklinksOf(this.app, file, this.settings.backlinkExcludePatterns);
-        }
-        if (isInSrc(file.path, this.settings)) {
-          await assignSrcIdIfMissing(this.app, file, this.settings);
+        // バックリンク更新（ファイルが削除直後の場合はスキップ）
+        if (this.settings.enableBacklinks) {
+          if (
+            this.app.vault.getFileByPath(file.path) &&
+            isInAnyMode(file.path, this.settings.modes, this.settings.backlinkExcludePatterns)
+          ) {
+            try {
+              await updateBacklinksOf(this.app, file, this.settings.backlinkExcludePatterns);
+            } catch {
+              // 削除直後のインデックス競合は無視
+            }
+          }
         }
       })
     );
