@@ -10,4 +10,8 @@ export class CurrentMode {
   getMode(): Mode | null {
     return this.mode;
   }
+
+  clearMode(): void {
+    this.mode = null;
+  }
 }

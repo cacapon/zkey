@@ -30,4 +30,10 @@ describe("CurrentMode", () => {
     currentMode.setMode(makeMode("Temp"));
     expect(currentMode.getMode()?.name).toBe("Temp");
   });
+
+  it("clearModeを呼ぶとnullになる", () => {
+    currentMode.setMode(makeMode("Core"));
+    currentMode.clearMode();
+    expect(currentMode.getMode()).toBeNull();
+  });
 });
