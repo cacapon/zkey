@@ -30,6 +30,21 @@ export class CreateModeModal extends Modal {
     errorEl.style.color = "var(--text-error)";
     errorEl.style.display = "none";
 
+    const submit = () => {
+      if (!this.name) {
+        errorEl.setText("モード名を入力してください");
+        errorEl.style.display = "";
+        return;
+      }
+
+      const dirPath = this.dirPath || this.name;
+      const rawTempPath = this.tempPath || `${this.defaultTemplateFolder}/${this.name}.md`;
+      const tempPath = rawTempPath.endsWith(".md") ? rawTempPath : `${rawTempPath}.md`;
+
+      this.close();
+      this.onSubmit({ name: this.name, dirPath, tempPath });
+    };
+
     let dirText: TextComponent;
     let tempText: TextComponent;
 
@@ -49,6 +64,9 @@ export class CreateModeModal extends Modal {
             this.tempPath = autoTemp;
             tempText.setValue(autoTemp);
           }
+        });
+        t.inputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submit();
         });
       });
 
@@ -80,22 +98,7 @@ export class CreateModeModal extends Modal {
       this.close();
     });
 
-    btnRow
-      .createEl("button", { text: "作成", cls: "mod-cta" })
-      .addEventListener("click", () => {
-        if (!this.name) {
-          errorEl.setText("モード名を入力してください");
-          errorEl.style.display = "";
-          return;
-        }
-
-        const dirPath = this.dirPath || this.name;
-        const rawTempPath = this.tempPath || `${this.defaultTemplateFolder}/${this.name}.md`;
-        const tempPath = rawTempPath.endsWith(".md") ? rawTempPath : `${rawTempPath}.md`;
-
-        this.close();
-        this.onSubmit({ name: this.name, dirPath, tempPath });
-      });
+    btnRow.createEl("button", { text: "作成", cls: "mod-cta" }).addEventListener("click", submit);
   }
 
   onClose(): void {
