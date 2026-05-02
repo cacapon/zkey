@@ -1,1 +1,10 @@
-{"id":"zk","name":"Zk","version":"0.3.1","minAppVersion":"1.4.0","description":"CLI-oriented Zettelkasten for Obsidian","author":"Cacapon Project","authorUrl":"https://github.com/cacapon","isDesktopOnly":false}
+{
+  "id": "zk",
+  "name": "Zk",
+  "version": "0.3.2",
+  "minAppVersion": "1.4.0",
+  "description": "CLI-oriented Zettelkasten for Obsidian",
+  "author": "Cacapon Project",
+  "authorUrl": "https://github.com/cacapon",
+  "isDesktopOnly": false
+}
