@@ -1,4 +1,4 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Setting, TextComponent } from "obsidian";
 
 export interface CreateModeInput {
   name: string;
@@ -10,6 +10,7 @@ export class CreateModeModal extends Modal {
   private name = "";
   private dirPath = "";
   private tempPath = "";
+  private tempPathManuallyChanged = false;
 
   constructor(
     app: App,
@@ -27,6 +28,8 @@ export class CreateModeModal extends Modal {
     errorEl.style.color = "var(--text-error)";
     errorEl.style.display = "none";
 
+    let tempText: TextComponent;
+
     new Setting(contentEl)
       .setName("モード名")
       .setDesc("表示名（例: Core, Temp）")
@@ -36,8 +39,10 @@ export class CreateModeModal extends Modal {
           if (!this.dirPath) {
             this.dirPath = this.name;
           }
-          if (!this.tempPath) {
-            this.tempPath = `${this.defaultTemplateFolder}/${this.name}.md`;
+          if (!this.tempPathManuallyChanged) {
+            const auto = `${this.defaultTemplateFolder}/${this.name}.md`;
+            this.tempPath = auto;
+            tempText.setValue(auto);
           }
         });
       });
@@ -55,8 +60,10 @@ export class CreateModeModal extends Modal {
       .setName("テンプレートパス")
       .setDesc("新規ノート作成時に使うテンプレートファイル")
       .addText((t) => {
-        t.setPlaceholder("Templates/Core.md").onChange((v) => {
+        tempText = t;
+        t.setValue(`${this.defaultTemplateFolder}/`).onChange((v) => {
           this.tempPath = v.trim();
+          this.tempPathManuallyChanged = true;
         });
       });
 
