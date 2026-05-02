@@ -21,7 +21,11 @@ export default class ZkPlugin extends Plugin {
   settings!: ZkSettings;
 
   async onload(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const data = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings);
+    for (const mode of data?.modes ?? []) {
+      this.modeList.addMode(mode);
+    }
     this.addSettingTab(new ZkSettingTab(this.app, this));
 
     this.addCommand({
@@ -43,6 +47,7 @@ export default class ZkPlugin extends Plugin {
 
           const mode = this.modeList.getModes().find((m) => m.name === input.name);
           if (mode) {
+            await this.saveAll();
             this.currentMode.setMode(mode);
             await this.editor.openNote(mode.currPath);
           }
@@ -80,8 +85,9 @@ export default class ZkPlugin extends Plugin {
       id: "zk-delete-mode",
       name: "モードを削除",
       callback: () => {
-        new DeleteModeModal(this.app, this.modeList.getModes(), (mode) => {
+        new DeleteModeModal(this.app, this.modeList.getModes(), async (mode) => {
           deleteMode(mode, this.modeList, this.currentMode);
+          await this.saveAll();
         }).open();
       },
     });
@@ -98,8 +104,12 @@ export default class ZkPlugin extends Plugin {
     });
   }
 
+  private async saveAll(): Promise<void> {
+    await this.saveData({ settings: this.settings, modes: this.modeList.getModes() });
+  }
+
   async updateSettings(patch: Partial<ZkSettings>): Promise<void> {
     Object.assign(this.settings, patch);
-    await this.saveData(this.settings);
+    await this.saveAll();
   }
 }
