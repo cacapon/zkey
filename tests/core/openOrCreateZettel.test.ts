@@ -33,10 +33,11 @@ describe("openOrCreateZettel", () => {
     modeList.addMode(mode);
   });
 
-  it("ノートが存在しない場合は作成する", async () => {
+  it("ノートが存在しない場合は作成してtrueを返す", async () => {
     const fs = makeFs();
-    await openOrCreateZettel("NewNote", mode, modeList, fs, makeEditor());
+    const result = await openOrCreateZettel("NewNote", mode, modeList, fs, makeEditor());
     expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", "");
+    expect(result).toBe(true);
   });
 
   it("テンプレートが存在する場合はその内容でノートを作成する", async () => {
@@ -51,10 +52,11 @@ describe("openOrCreateZettel", () => {
     expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", "");
   });
 
-  it("ノートが既に存在する場合は作成しない", async () => {
+  it("ノートが既に存在する場合は作成せずfalseを返す", async () => {
     const fs = makeFs(["/notes/Core/NewNote.md"]);
-    await openOrCreateZettel("NewNote", mode, modeList, fs, makeEditor());
+    const result = await openOrCreateZettel("NewNote", mode, modeList, fs, makeEditor());
     expect(fs.createFile).not.toHaveBeenCalled();
+    expect(result).toBe(false);
   });
 
   it("currPathが更新される", async () => {

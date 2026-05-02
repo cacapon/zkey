@@ -3,6 +3,7 @@ import { ModeList } from "./core/modeList";
 import { CurrentMode } from "./core/currentMode";
 import { ObsidianFileSystem } from "./infra/obsidianFileSystem";
 import { ObsidianEditor } from "./infra/obsidianEditor";
+import { ObsidianNotifier } from "./infra/obsidianNotifier";
 import { createMode } from "./core/createMode";
 import { CreateModeModal } from "./ui/createModeModal";
 import { Switcher } from "./ui/switcher";
@@ -18,6 +19,7 @@ export default class ZkPlugin extends Plugin {
   private currentMode = new CurrentMode();
   private fs = new ObsidianFileSystem(this.app.vault);
   private editor = new ObsidianEditor(this.app.workspace);
+  private notifier = new ObsidianNotifier();
   settings!: ZkSettings;
 
   async onload(): Promise<void> {
@@ -47,6 +49,7 @@ export default class ZkPlugin extends Plugin {
               onChoose: async () => {
                 this.currentMode.setMode(mode);
                 await this.editor.openNote(mode.currPath);
+                this.notifier.notify(`「${mode.name}」に切り替えました`);
               },
             })),
             {
@@ -60,12 +63,14 @@ export default class ZkPlugin extends Plugin {
         const selection = this.editor.getSelection();
         if (selection) {
           this.editor.replaceSelection(`[[${selection}]]`);
-          await openOrCreateZettel(selection, currentMode, this.modeList, this.fs, this.editor);
+          const created = await openOrCreateZettel(selection, currentMode, this.modeList, this.fs, this.editor);
+          if (created) this.notifier.notify(`「${selection}」を作成しました`);
           return;
         }
 
         new ZettelNameModal(this.app, "", async (name) => {
-          await openOrCreateZettel(name, currentMode, this.modeList, this.fs, this.editor);
+          const created = await openOrCreateZettel(name, currentMode, this.modeList, this.fs, this.editor);
+          if (created) this.notifier.notify(`「${name}」を作成しました`);
         }).open();
       },
     });
@@ -77,6 +82,7 @@ export default class ZkPlugin extends Plugin {
         new DeleteModeModal(this.app, this.modeList.getModes(), async (mode) => {
           deleteMode(mode, this.modeList, this.currentMode);
           await this.saveAll();
+          this.notifier.notify(`「${mode.name}」を削除しました`);
         }).open();
       },
     });
@@ -92,6 +98,7 @@ export default class ZkPlugin extends Plugin {
             onChoose: async () => {
               this.currentMode.setMode(mode);
               await this.editor.openNote(mode.currPath);
+              this.notifier.notify(`「${mode.name}」に切り替えました`);
             },
           })),
           {
@@ -113,7 +120,7 @@ export default class ZkPlugin extends Plugin {
         this.fs
       );
       if (!ok) {
-        // 同名モードが既に存在する場合
+        this.notifier.notify(`「${input.name}」は既に存在します`);
         return;
       }
 
@@ -122,6 +129,7 @@ export default class ZkPlugin extends Plugin {
         await this.saveAll();
         this.currentMode.setMode(mode);
         await this.editor.openNote(mode.currPath);
+        this.notifier.notify(`「${input.name}」を作成しました`);
       }
     }).open();
   }
