@@ -9,6 +9,12 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Error: uncommitted changes exist. Please commit or stash them before releasing."
+  git status --short
+  exit 1
+fi
+
 jq --arg v "$VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
 git add manifest.json
 git commit -m "chore: bump version to $VERSION"
