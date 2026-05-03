@@ -5,7 +5,7 @@ export class ObsidianEditor implements Editor {
   constructor(private workspace: Workspace) {}
 
   async openNote(path: string): Promise<void> {
-    await this.workspace.openLinkText(path, "", true);
+    await this.workspace.openLinkText(path, "", false);
   }
 
   getSelection(): string | null {
