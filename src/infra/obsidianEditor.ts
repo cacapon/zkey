@@ -16,4 +16,8 @@ export class ObsidianEditor implements Editor {
   replaceSelection(text: string): void {
     this.workspace.activeEditor?.editor?.replaceSelection(text);
   }
+
+  getActiveFilePath(): string | null {
+    return this.workspace.getActiveFile()?.path ?? null;
+  }
 }

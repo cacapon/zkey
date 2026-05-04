@@ -20,10 +20,11 @@ const makeFs = (existingPaths: string[] = [], templateContent = ""): FileSystem 
   readFile: vi.fn().mockResolvedValue(templateContent),
 });
 
-const makeEditor = (): Editor => ({
+const makeEditor = (activeFilePath: string | null = "/notes/Core/Core.md"): Editor => ({
   openNote: vi.fn(),
   getSelection: vi.fn(),
   replaceSelection: vi.fn(),
+  getActiveFilePath: vi.fn().mockReturnValue(activeFilePath),
 });
 
 const makeMetadataCache = (): MetadataCache => ({
@@ -91,5 +92,21 @@ describe("openOrCreateZettel", () => {
     const fs = makeFs(["/templates/Core.md"], template);
     await openOrCreateZettel("NewNote", mode, modeList, fs, makeEditor(), makeMetadataCache());
     expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", template);
+  });
+
+  it("テンプレートに{{origin}}がある場合はアクティブファイル名のwikilinkに置換される", async () => {
+    const template = 'zk-origin: "[[{{origin}}]]"';
+    const fs = makeFs(["/templates/Core.md"], template);
+    const editor = makeEditor("/notes/Core/ParentNote.md");
+    await openOrCreateZettel("NewNote", mode, modeList, fs, editor, makeMetadataCache());
+    expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", 'zk-origin: "[[ParentNote]]"');
+  });
+
+  it("アクティブファイルがない場合はルートノート名をoriginにする", async () => {
+    const template = 'zk-origin: "[[{{origin}}]]"';
+    const fs = makeFs(["/templates/Core.md"], template);
+    const editor = makeEditor(null);
+    await openOrCreateZettel("NewNote", mode, modeList, fs, editor, makeMetadataCache());
+    expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", 'zk-origin: "[[Core]]"');
   });
 });
