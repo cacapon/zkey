@@ -9,6 +9,9 @@ const makeFs = (existingPaths: string[] = []): FileSystem => ({
   createFolder: vi.fn(),
   createFile: vi.fn(),
   readFile: vi.fn(),
+  writeFile: vi.fn(),
+  rename: vi.fn(),
+  listFiles: vi.fn().mockReturnValue([]),
 });
 
 const makeMetadataCache = (): MetadataCache => ({

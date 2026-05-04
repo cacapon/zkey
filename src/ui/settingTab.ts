@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type ZkPlugin from "../main";
-import { IconPickerModal } from "./iconPickerModal";
+import { EditModeModal } from "./editModeModal";
 
 export class ZkSettingTab extends PluginSettingTab {
   constructor(app: App, private plugin: ZkPlugin) {
@@ -36,27 +36,27 @@ export class ZkSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "モード設定" });
 
     for (const mode of this.plugin.getModes()) {
-      new Setting(containerEl)
-        .setName(mode.name)
-        .addButton((btn) => {
-          if (mode.icon) setIcon(btn.buttonEl, mode.icon);
-          else btn.setButtonText("(なし)");
-          btn.setTooltip("アイコンを変更").onClick(() => {
-            new IconPickerModal(this.app, async (iconId) => {
-              await this.plugin.updateModeConfig(mode.name, { icon: iconId, prefix: mode.prefix });
-              btn.buttonEl.empty();
-              if (iconId) setIcon(btn.buttonEl, iconId);
-              else btn.buttonEl.setText("(なし)");
-            }).open();
-          });
-        })
-        .addText((t) => {
-          t.setPlaceholder("プレフィックス（例: C）")
-            .setValue(mode.prefix ?? "")
-            .onChange(async (v) => {
-              await this.plugin.updateModeConfig(mode.name, { icon: mode.icon, prefix: v.trim() });
-            });
+      const setting = new Setting(containerEl).setName(mode.name);
+
+      if (mode.icon) {
+        const iconEl = setting.nameEl.createSpan({ cls: "zk-mode-icon" });
+        iconEl.style.marginRight = "6px";
+        setIcon(iconEl, mode.icon);
+        setting.nameEl.prepend(iconEl);
+      }
+
+      setting.addButton((btn) => {
+        setIcon(btn.buttonEl, "settings");
+        btn.setTooltip("編集").onClick(() => {
+          new EditModeModal(this.app, mode, async (input) => {
+            if (input.name !== mode.name) {
+              await this.plugin.renameModeConfig(mode.name, input.name);
+            }
+            await this.plugin.updateModeConfig(input.name, { icon: input.icon, prefix: input.prefix });
+            this.display();
+          }).open();
         });
+      });
     }
   }
 }

@@ -3,4 +3,7 @@ export interface FileSystem {
   createFile(path: string, content: string): Promise<void>;
   exists(path: string): boolean;
   readFile(path: string): Promise<string>;
+  writeFile(path: string, content: string): Promise<void>;
+  rename(oldPath: string, newPath: string): Promise<void>;
+  listFiles(dirPath: string): string[];
 }

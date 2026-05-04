@@ -18,6 +18,9 @@ const makeFs = (existingPaths: string[] = [], templateContent = ""): FileSystem 
   createFolder: vi.fn(),
   createFile: vi.fn(),
   readFile: vi.fn().mockResolvedValue(templateContent),
+  writeFile: vi.fn(),
+  rename: vi.fn(),
+  listFiles: vi.fn().mockReturnValue([]),
 });
 
 const makeEditor = (activeFilePath: string | null = "/notes/Core/Core.md"): Editor => ({

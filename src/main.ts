@@ -13,6 +13,7 @@ import { ZettelNameModal } from "./ui/zettelNameModal";
 import { openOrCreateZettel } from "./core/openOrCreateZettel";
 import { DeleteModeModal } from "./ui/deleteModeModal";
 import { deleteMode } from "./core/deleteMode";
+import { renameMode } from "./core/renameMode";
 import { ZkSettingTab } from "./ui/settingTab";
 import { ZkSettings, DEFAULT_SETTINGS } from "./core/zkSettings";
 
@@ -156,6 +157,20 @@ export default class ZkPlugin extends Plugin {
 
   getModes() {
     return this.modeList.getModes();
+  }
+
+  async renameModeConfig(oldName: string, newName: string): Promise<boolean> {
+    const mode = this.modeList.getModes().find((m) => m.name === oldName);
+    if (!mode) return false;
+    const ok = await renameMode(mode, newName, this.modeList, this.fs);
+    if (ok) {
+      await this.saveAll();
+      this.updateStatusBar();
+      this.notifier.notify(`「${oldName}」を「${newName}」にリネームしました`);
+    } else {
+      this.notifier.notify(`「${newName}」は既に存在します`);
+    }
+    return ok;
   }
 
   async updateModeConfig(name: string, patch: Pick<Mode, "icon" | "prefix">): Promise<void> {
