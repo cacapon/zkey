@@ -3,6 +3,7 @@ import { Mode } from "./core/mode";
 import { ModeList } from "./core/modeList";
 import { CurrentMode } from "./core/currentMode";
 import { ObsidianFileSystem } from "./infra/obsidianFileSystem";
+import { getCoreTemplateFolder } from "./infra/obsidianTemplateFolder";
 import { ObsidianEditor } from "./infra/obsidianEditor";
 import { ObsidianNotifier } from "./infra/obsidianNotifier";
 import { ObsidianMetadataCache } from "./infra/obsidianMetadataCache";
@@ -145,7 +146,8 @@ export default class ZkPlugin extends Plugin {
   }
 
   private openCreateModeModal(): void {
-    new CreateModeModal(this.app, this.settings.defaultNoteFolder, this.settings.defaultTemplateFolder, async (input) => {
+    const templateFolder = getCoreTemplateFolder(this.app) ?? this.settings.defaultTemplateFolder;
+    new CreateModeModal(this.app, this.settings.defaultNoteFolder, templateFolder, async (input) => {
       const ok = await createMode(
         input.name,
         input.dirPath,
@@ -199,7 +201,7 @@ export default class ZkPlugin extends Plugin {
     return ok;
   }
 
-  async updateModeConfig(name: string, patch: Pick<Mode, "icon" | "prefix">): Promise<void> {
+  async updateModeConfig(name: string, patch: Pick<Mode, "icon" | "prefix" | "tempPath">): Promise<void> {
     const mode = this.modeList.getModes().find((m) => m.name === name);
     if (!mode) return;
     this.modeList.updateMode({ ...mode, ...patch });

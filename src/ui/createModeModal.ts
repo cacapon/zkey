@@ -1,5 +1,6 @@
 import { App, Modal, Setting, TextComponent, setIcon } from "obsidian";
 import { IconPickerModal } from "./iconPickerModal";
+import { FileSuggest } from "./fileSuggest";
 
 export interface CreateModeInput {
   name: string;
@@ -116,6 +117,9 @@ export class CreateModeModal extends Modal {
           this.tempPath = v.trim();
           this.tempPathManuallyChanged = true;
         });
+        if (this.defaultTemplateFolder) {
+          new FileSuggest(this.app, t.inputEl, this.defaultTemplateFolder);
+        }
       });
 
     const btnRow = contentEl.createDiv({ cls: "modal-button-container" });
