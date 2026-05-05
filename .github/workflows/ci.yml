@@ -32,9 +32,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Generate release notes
+        id: notes
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            NOTES=$(git log --pretty=format:"- %s" | grep -v "^- chore: bump version")
+          else
+            NOTES=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" | grep -v "^- chore: bump version")
+          fi
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: ${{ steps.notes.outputs.notes }}
           files: |
             main.js
             manifest.json
