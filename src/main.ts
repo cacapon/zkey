@@ -115,13 +115,13 @@ export default class ZkPlugin extends Plugin {
           this.notifier.notify("モードが選択されていません");
           return;
         }
-        await this.editor.openNote(mode.currPath);
+        await this.editor.openNote(`${mode.dirPath}/${mode.name}.md`);
       },
     });
 
     this.addCommand({
       id: "zk-link-switcher",
-      name: "リンクを切り替え",
+      name: "リンクスイッチャー",
       callback: async () => {
         const filePath = this.editor.getActiveFilePath();
         if (!filePath) return;
@@ -140,7 +140,7 @@ export default class ZkPlugin extends Plugin {
 
     this.addCommand({
       id: "zk-switch-mode",
-      name: "モードを切り替え",
+      name: "モード切り替え",
       callback: () => {
         new Switcher(this.app, [
           ...this.modeList.getModes().map((mode) => ({
