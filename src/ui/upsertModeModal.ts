@@ -1,36 +1,36 @@
 import { App, Modal, Setting, TextComponent, setIcon } from "obsidian";
+import { Mode } from "../core/mode";
+import { ModeInput } from "../core/upsertMode";
 import { IconPickerModal } from "./iconPickerModal";
 import { FileSuggest } from "./fileSuggest";
 
-export interface CreateModeInput {
-  name: string;
-  rootPath: string;
-  tempPath: string;
-  prefix: string;
-  icon: string;
-}
-
-export class CreateModeModal extends Modal {
-  private name = "";
-  private rootPath = "";
-  private tempPath = "";
-  private prefix = "";
-  private icon = "lucide-notepad-text";
-  private rootPathManuallyChanged = false;
-  private tempPathManuallyChanged = false;
+export class UpsertModeModal extends Modal {
+  private name: string;
+  private rootPath: string;
+  private tempPath: string;
+  private prefix: string;
+  private icon: string;
+  private nameManuallyChanged = false;
 
   constructor(
     app: App,
+    private existingMode: Mode | null,
     private defaultNoteFolder: string,
     private defaultTemplateFolder: string,
-    private onSubmit: (input: CreateModeInput) => void
+    private onSubmit: (input: ModeInput) => void
   ) {
     super(app);
+    this.name = existingMode?.name ?? "";
+    this.rootPath = existingMode?.rootPath ?? "";
+    this.tempPath = existingMode?.tempPath ?? "";
+    this.prefix = existingMode?.prefix ?? "";
+    this.icon = existingMode?.icon ?? "lucide-notepad-text";
   }
 
   onOpen(): void {
     const { contentEl } = this;
-    contentEl.createEl("h2", { text: "新しいモードを作成" });
+    const isEdit = this.existingMode !== null;
+    contentEl.createEl("h2", { text: isEdit ? `「${this.existingMode!.name}」を編集` : "新しいモードを作成" });
 
     const errorEl = contentEl.createEl("p");
     errorEl.style.color = "var(--text-error)";
@@ -42,18 +42,25 @@ export class CreateModeModal extends Modal {
         errorEl.style.display = "";
         return;
       }
-
-      const rawRootPath = this.rootPath || `${this.defaultNoteFolder}/${this.name}/${this.name}Root.md`;
-      const rootPath = rawRootPath.endsWith(".md") ? rawRootPath : `${rawRootPath}.md`;
-      const rawTempPath = this.tempPath || `${this.defaultTemplateFolder}/${this.name}Template.md`;
-      const tempPath = rawTempPath.endsWith(".md") ? rawTempPath : `${rawTempPath}.md`;
-
+      const rawRoot = this.rootPath || `${this.defaultNoteFolder}/${this.name}/${this.name}Root.md`;
+      const rootPath = rawRoot.endsWith(".md") ? rawRoot : `${rawRoot}.md`;
+      const rawTemp = this.tempPath || `${this.defaultTemplateFolder}/${this.name}Template.md`;
+      const tempPath = rawTemp.endsWith(".md") ? rawTemp : `${rawTemp}.md`;
       this.close();
       this.onSubmit({ name: this.name, rootPath, tempPath, prefix: this.prefix, icon: this.icon });
     };
 
     let rootText: TextComponent;
     let tempText: TextComponent;
+
+    const updatePaths = (name: string) => {
+      const autoRoot = `${this.defaultNoteFolder}/${name}/${name}Root.md`;
+      const autoTemp = `${this.defaultTemplateFolder}/${name}Template.md`;
+      this.rootPath = autoRoot;
+      this.tempPath = autoTemp;
+      rootText.setValue(autoRoot);
+      tempText.setValue(autoTemp);
+    };
 
     new Setting(contentEl)
       .setName("モード名")
@@ -63,28 +70,18 @@ export class CreateModeModal extends Modal {
           new IconPickerModal(this.app, (iconId) => {
             this.icon = iconId;
             btn.buttonEl.empty();
-            if (iconId) {
-              setIcon(btn.buttonEl, iconId);
-            } else {
-              btn.buttonEl.setText("(なし)");
-            }
+            if (iconId) setIcon(btn.buttonEl, iconId);
+            else btn.buttonEl.setText("(なし)");
           }).open();
         });
-        setIcon(btn.buttonEl, "lucide-notepad-text");
+        if (this.icon) setIcon(btn.buttonEl, this.icon);
+        else btn.buttonEl.setText("(なし)");
       })
       .addText((t) => {
-        t.setPlaceholder("Core").onChange((v) => {
+        t.setValue(this.name).onChange((v) => {
           this.name = v.trim();
-          if (!this.rootPathManuallyChanged) {
-            const autoRoot = `${this.defaultNoteFolder}/${this.name}/${this.name}Root.md`;
-            this.rootPath = autoRoot;
-            rootText.setValue(autoRoot);
-          }
-          if (!this.tempPathManuallyChanged) {
-            const autoTemp = `${this.defaultTemplateFolder}/${this.name}Template.md`;
-            this.tempPath = autoTemp;
-            tempText.setValue(autoTemp);
-          }
+          this.nameManuallyChanged = true;
+          updatePaths(this.name);
         });
         t.inputEl.addEventListener("keydown", (e) => {
           if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); submit(); }
@@ -95,7 +92,7 @@ export class CreateModeModal extends Modal {
       .setName("IDプレフィックス")
       .setDesc("ノートIDの先頭に付ける文字（例: C → Ca3f9x2...）。空欄でも可。")
       .addText((t) => {
-        t.setPlaceholder("C").onChange((v) => { this.prefix = v.trim(); });
+        t.setValue(this.prefix).onChange((v) => { this.prefix = v.trim(); });
       });
 
     const rootSetting = new Setting(contentEl)
@@ -104,9 +101,8 @@ export class CreateModeModal extends Modal {
       .addText((t) => {
         rootText = t;
         t.inputEl.style.width = "100%";
-        t.setValue(`${this.defaultNoteFolder}/`).onChange((v) => {
-          this.rootPath = v.trim();
-          this.rootPathManuallyChanged = true;
+        t.setValue(this.rootPath || `${this.defaultNoteFolder}/`).onChange((v) => {
+          if (!this.nameManuallyChanged) this.rootPath = v.trim();
         });
       });
     rootSetting.settingEl.style.flexWrap = "wrap";
@@ -118,9 +114,8 @@ export class CreateModeModal extends Modal {
       .addText((t) => {
         tempText = t;
         t.inputEl.style.width = "100%";
-        t.setValue(`${this.defaultTemplateFolder}/`).onChange((v) => {
-          this.tempPath = v.trim();
-          this.tempPathManuallyChanged = true;
+        t.setValue(this.tempPath || `${this.defaultTemplateFolder}/`).onChange((v) => {
+          if (!this.nameManuallyChanged) this.tempPath = v.trim();
         });
         if (this.defaultTemplateFolder) {
           new FileSuggest(this.app, t.inputEl, this.defaultTemplateFolder);
@@ -130,12 +125,8 @@ export class CreateModeModal extends Modal {
     tempSetting.controlEl.style.width = "100%";
 
     const btnRow = contentEl.createDiv({ cls: "modal-button-container" });
-
-    btnRow.createEl("button", { text: "キャンセル" }).addEventListener("click", () => {
-      this.close();
-    });
-
-    btnRow.createEl("button", { text: "作成", cls: "mod-cta" }).addEventListener("click", submit);
+    btnRow.createEl("button", { text: "キャンセル" }).addEventListener("click", () => { this.close(); });
+    btnRow.createEl("button", { text: isEdit ? "保存" : "作成", cls: "mod-cta" }).addEventListener("click", submit);
   }
 
   onClose(): void {

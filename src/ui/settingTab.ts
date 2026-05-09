@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type ZkPlugin from "../main";
-import { EditModeModal } from "./editModeModal";
+import { UpsertModeModal } from "./upsertModeModal";
 import { getCoreTemplateFolder } from "../infra/obsidianTemplateFolder";
 
 export class ZkSettingTab extends PluginSettingTab {
@@ -66,11 +66,8 @@ export class ZkSettingTab extends PluginSettingTab {
       setting.addButton((btn) => {
         setIcon(btn.buttonEl, "settings");
         btn.setTooltip("編集").onClick(() => {
-          new EditModeModal(this.app, mode, templateFolder, this.plugin.getModes().map((m) => m.name), async (input) => {
-            if (input.name !== mode.name) {
-              await this.plugin.renameModeConfig(mode.name, input.name);
-            }
-            await this.plugin.updateModeConfig(input.name, { icon: input.icon, prefix: input.prefix, tempPath: input.tempPath });
+          new UpsertModeModal(this.app, mode, this.plugin.settings.defaultNoteFolder, templateFolder ?? this.plugin.settings.defaultTemplateFolder, async (input) => {
+            await this.plugin.upsertModeConfig(mode, input);
             this.display();
           }).open();
         });

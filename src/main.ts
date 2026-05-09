@@ -7,13 +7,12 @@ import { getCoreTemplateFolder } from "./infra/obsidianTemplateFolder";
 import { ObsidianEditor } from "./infra/obsidianEditor";
 import { ObsidianNotifier } from "./infra/obsidianNotifier";
 import { ObsidianMetadataCache } from "./infra/obsidianMetadataCache";
-import { createMode } from "./core/createMode";
-import { CreateModeModal } from "./ui/createModeModal";
+import { upsertMode } from "./core/upsertMode";
+import { UpsertModeModal } from "./ui/upsertModeModal";
 import { Switcher } from "./ui/switcher";
 import { openOrCreateZettel } from "./core/openOrCreateZettel";
 import { DeleteModeModal } from "./ui/deleteModeModal";
 import { deleteMode } from "./core/deleteMode";
-import { renameMode } from "./core/renameMode";
 import { ZkSettingTab } from "./ui/settingTab";
 import { ZkSettings, DEFAULT_SETTINGS } from "./core/zkSettings";
 import { getLinkSwitcherItems } from "./core/linkSwitcherItems";
@@ -62,7 +61,7 @@ export default class ZkPlugin extends Plugin {
     this.addCommand({
       id: "zk-create-mode",
       name: "モードを作成",
-      callback: () => { this.openCreateModeModal(); },
+      callback: () => { this.openUpsertModeModal(null); },
     });
 
     this.addCommand({
@@ -84,7 +83,7 @@ export default class ZkPlugin extends Plugin {
             })),
             {
               label: "+ 新しいモードを作成",
-              onChoose: () => { this.openCreateModeModal(); },
+              onChoose: () => { this.openUpsertModeModal(null); },
             },
           ]).open();
           return;
@@ -156,37 +155,31 @@ export default class ZkPlugin extends Plugin {
           })),
           {
             label: "+ 新しいモードを作成",
-            onChoose: () => { this.openCreateModeModal(); },
+            onChoose: () => { this.openUpsertModeModal(null); },
           },
         ]).open();
       },
     });
   }
 
-  private openCreateModeModal(): void {
+  private openUpsertModeModal(existingMode: Mode | null): void {
     const templateFolder = getCoreTemplateFolder(this.app) ?? this.settings.defaultTemplateFolder;
-    new CreateModeModal(this.app, this.settings.defaultNoteFolder, templateFolder, async (input) => {
-      const ok = await createMode(
-        input.name,
-        input.rootPath,
-        input.tempPath,
-        this.modeList,
-        this.fs,
-        this.metadataCache,
-        input.prefix,
-        input.icon
-      );
+    new UpsertModeModal(this.app, existingMode, this.settings.defaultNoteFolder, templateFolder, async (input) => {
+      const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache);
       if (!ok) {
         this.notifier.notify(`「${input.name}」は既に存在します`);
         return;
       }
-
       const mode = this.modeList.getModes().find((m) => m.name === input.name);
       if (mode) {
         await this.saveAll();
-        this.currentMode.setMode(mode);
-        await this.editor.openNote(mode.currPath);
-        this.notifier.notify(`「${input.name}」を作成しました`);
+        if (!existingMode) {
+          this.currentMode.setMode(mode);
+          await this.editor.openNote(mode.currPath);
+          this.notifier.notify(`「${input.name}」を作成しました`);
+        } else {
+          this.notifier.notify(`「${input.name}」を更新しました`);
+        }
         this.updateStatusBar();
       }
     }).open();
@@ -244,26 +237,16 @@ export default class ZkPlugin extends Plugin {
     return this.modeList.getModes();
   }
 
-  async renameModeConfig(oldName: string, newName: string): Promise<boolean> {
-    const mode = this.modeList.getModes().find((m) => m.name === oldName);
-    if (!mode) return false;
-    const ok = await renameMode(mode, newName, this.modeList, this.fs);
+  async upsertModeConfig(existingMode: Mode, input: { name: string; rootPath: string; tempPath: string; prefix: string; icon: string }): Promise<boolean> {
+    const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache);
     if (ok) {
       await this.saveAll();
       this.updateStatusBar();
-      this.notifier.notify(`「${oldName}」を「${newName}」にリネームしました`);
+      this.notifier.notify(`「${input.name}」を更新しました`);
     } else {
-      this.notifier.notify(`「${newName}」は既に存在します`);
+      this.notifier.notify(`「${input.name}」は既に存在します`);
     }
     return ok;
-  }
-
-  async updateModeConfig(name: string, patch: Pick<Mode, "icon" | "prefix" | "tempPath">): Promise<void> {
-    const mode = this.modeList.getModes().find((m) => m.name === name);
-    if (!mode) return;
-    this.modeList.updateMode({ ...mode, ...patch });
-    await this.saveAll();
-    this.updateStatusBar();
   }
 
   updateStatusBar(): void {
