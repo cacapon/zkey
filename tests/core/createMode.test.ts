@@ -5,7 +5,7 @@ import { FileSystem } from "../../src/core/fileSystem";
 import { MetadataCache } from "../../src/core/metadataCache";
 
 const makeFs = (existingPaths: string[] = []): FileSystem => ({
-  exists: (path) => existingPaths.includes(path),
+  exists: async (path) => existingPaths.includes(path),
   createFolder: vi.fn(),
   createFile: vi.fn(),
   readFile: vi.fn(),

@@ -12,8 +12,8 @@ export class ObsidianFileSystem implements FileSystem {
     await this.vault.create(path, content);
   }
 
-  exists(path: string): boolean {
-    return this.vault.getAllLoadedFiles().some((f) => f.path === path);
+  async exists(path: string): Promise<boolean> {
+    return await this.vault.adapter.exists(path);
   }
 
   async readFile(path: string): Promise<string> {

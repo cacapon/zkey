@@ -9,10 +9,11 @@ const mode: Mode = {
   dirPath: "/notes/Core",
   tempPath: "/templates/Core.md",
   currPath: "/notes/Core/Core.md",
+  rootPath: "/notes/Core/Core.md",
 };
 
 const makeFs = (existingPaths: string[] = [], fileContents: Record<string, string> = {}): FileSystem => ({
-  exists: (path) => existingPaths.includes(path),
+  exists: async (path) => existingPaths.includes(path),
   createFolder: vi.fn(),
   createFile: vi.fn(),
   readFile: vi.fn().mockImplementation((path: string) => Promise.resolve(fileContents[path] ?? "")),

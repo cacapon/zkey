@@ -14,10 +14,10 @@ export async function openOrCreateZettel(
   metadataCache: MetadataCache
 ): Promise<boolean> {
   const path = `${mode.dirPath}/${name}.md`;
-  const created = !fs.exists(path);
+  const created = !await fs.exists(path);
 
   if (created) {
-    let content = fs.exists(mode.tempPath) ? await fs.readFile(mode.tempPath) : "";
+    let content = await fs.exists(mode.tempPath) ? await fs.readFile(mode.tempPath) : "";
     if (content.includes("{{zkid}}")) {
       const id = genUniqueID(mode.prefix ?? "", 15, metadataCache.getIds(mode.dirPath));
       const alias = genUniqueAlias(id, 4, metadataCache.getAliases(mode.dirPath)) ?? id;

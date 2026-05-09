@@ -26,17 +26,17 @@ export async function renameMode(
   // ルートノートを同フォルダ内でリネーム（フォルダリネーム前に行う）
   const oldRootPath = `${mode.dirPath}/${mode.name}.md`;
   const renamedRootPath = `${mode.dirPath}/${newName}.md`;
-  if (fs.exists(oldRootPath)) {
+  if (await fs.exists(oldRootPath)) {
     await fs.rename(oldRootPath, renamedRootPath);
   }
 
   // テンプレートのリネーム
-  if (fs.exists(mode.tempPath)) {
+  if (await fs.exists(mode.tempPath)) {
     await fs.rename(mode.tempPath, newTempPath);
   }
 
   // フォルダのリネーム（ルートノートも一緒に移動される）
-  if (fs.exists(mode.dirPath)) {
+  if (await fs.exists(mode.dirPath)) {
     await fs.rename(mode.dirPath, newDirPath);
   }
 

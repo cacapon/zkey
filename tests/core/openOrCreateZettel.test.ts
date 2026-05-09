@@ -11,10 +11,11 @@ const mode: Mode = {
   dirPath: "/notes/Core",
   tempPath: "/templates/Core.md",
   currPath: "/notes/Core/Core.md",
+  rootPath: "/notes/Core/Core.md",
 };
 
 const makeFs = (existingPaths: string[] = [], templateContent = ""): FileSystem => ({
-  exists: (path) => existingPaths.includes(path),
+  exists: async (path) => existingPaths.includes(path),
   createFolder: vi.fn(),
   createFile: vi.fn(),
   readFile: vi.fn().mockResolvedValue(templateContent),
@@ -28,11 +29,15 @@ const makeEditor = (activeFilePath: string | null = "/notes/Core/Core.md"): Edit
   getSelection: vi.fn(),
   replaceSelection: vi.fn(),
   getActiveFilePath: vi.fn().mockReturnValue(activeFilePath),
+  getCursorLinkTarget: vi.fn().mockReturnValue(null),
 });
 
 const makeMetadataCache = (): MetadataCache => ({
   getIds: vi.fn().mockReturnValue([]),
   getAliases: vi.fn().mockReturnValue([]),
+  getForwardLinks: vi.fn().mockReturnValue([]),
+  getBacklinks: vi.fn().mockReturnValue([]),
+  resolveLink: vi.fn().mockReturnValue(null),
 });
 
 describe("openOrCreateZettel", () => {

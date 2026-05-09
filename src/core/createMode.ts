@@ -30,22 +30,22 @@ export async function createMode(
     return false;
   }
 
-  if (!fs.exists(dirPath)) {
+  if (!await fs.exists(dirPath)) {
     await fs.createFolder(dirPath);
   }
 
-  if (!fs.exists(rootPath)) {
+  if (!await fs.exists(rootPath)) {
     const ids = metadataCache.getIds(dirPath);
     const aliases = metadataCache.getAliases(dirPath);
     await fs.createFile(rootPath, applyId(rootTemplate, prefix, ids, aliases));
   }
 
   const tempDir = tempPath.includes("/") ? tempPath.split("/").slice(0, -1).join("/") : null;
-  if (tempDir && !fs.exists(tempDir)) {
+  if (tempDir && !await fs.exists(tempDir)) {
     await fs.createFolder(tempDir);
   }
 
-  if (!fs.exists(tempPath)) {
+  if (!await fs.exists(tempPath)) {
     await fs.createFile(tempPath, defaultTemplate);
   }
 
