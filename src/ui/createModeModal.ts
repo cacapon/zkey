@@ -4,7 +4,7 @@ import { FileSuggest } from "./fileSuggest";
 
 export interface CreateModeInput {
   name: string;
-  dirPath: string;
+  rootPath: string;
   tempPath: string;
   prefix: string;
   icon: string;
@@ -12,11 +12,11 @@ export interface CreateModeInput {
 
 export class CreateModeModal extends Modal {
   private name = "";
-  private dirPath = "";
+  private rootPath = "";
   private tempPath = "";
   private prefix = "";
   private icon = "lucide-notepad-text";
-  private dirPathManuallyChanged = false;
+  private rootPathManuallyChanged = false;
   private tempPathManuallyChanged = false;
 
   constructor(
@@ -43,15 +43,16 @@ export class CreateModeModal extends Modal {
         return;
       }
 
-      const dirPath = this.dirPath || this.name;
-      const rawTempPath = this.tempPath || `${this.defaultTemplateFolder}/${this.name}.md`;
+      const rawRootPath = this.rootPath || `${this.defaultNoteFolder}/${this.name}/${this.name}Root.md`;
+      const rootPath = rawRootPath.endsWith(".md") ? rawRootPath : `${rawRootPath}.md`;
+      const rawTempPath = this.tempPath || `${this.defaultTemplateFolder}/${this.name}Template.md`;
       const tempPath = rawTempPath.endsWith(".md") ? rawTempPath : `${rawTempPath}.md`;
 
       this.close();
-      this.onSubmit({ name: this.name, dirPath, tempPath, prefix: this.prefix, icon: this.icon });
+      this.onSubmit({ name: this.name, rootPath, tempPath, prefix: this.prefix, icon: this.icon });
     };
 
-    let dirText: TextComponent;
+    let rootText: TextComponent;
     let tempText: TextComponent;
 
     new Setting(contentEl)
@@ -74,13 +75,13 @@ export class CreateModeModal extends Modal {
       .addText((t) => {
         t.setPlaceholder("Core").onChange((v) => {
           this.name = v.trim();
-          if (!this.dirPathManuallyChanged) {
-            const autoDir = `${this.defaultNoteFolder}/${this.name}`;
-            this.dirPath = autoDir;
-            dirText.setValue(autoDir);
+          if (!this.rootPathManuallyChanged) {
+            const autoRoot = `${this.defaultNoteFolder}/${this.name}/${this.name}Root.md`;
+            this.rootPath = autoRoot;
+            rootText.setValue(autoRoot);
           }
           if (!this.tempPathManuallyChanged) {
-            const autoTemp = `${this.defaultTemplateFolder}/${this.name}.md`;
+            const autoTemp = `${this.defaultTemplateFolder}/${this.name}Template.md`;
             this.tempPath = autoTemp;
             tempText.setValue(autoTemp);
           }
@@ -97,22 +98,26 @@ export class CreateModeModal extends Modal {
         t.setPlaceholder("C").onChange((v) => { this.prefix = v.trim(); });
       });
 
-    new Setting(contentEl)
-      .setName("フォルダパス")
-      .setDesc("ノートを保存するフォルダ")
+    const rootSetting = new Setting(contentEl)
+      .setName("ルートノートパス")
+      .setDesc("モードの起点となるノート。フォルダパスはここから自動設定されます。")
       .addText((t) => {
-        dirText = t;
+        rootText = t;
+        t.inputEl.style.width = "100%";
         t.setValue(`${this.defaultNoteFolder}/`).onChange((v) => {
-          this.dirPath = v.trim();
-          this.dirPathManuallyChanged = true;
+          this.rootPath = v.trim();
+          this.rootPathManuallyChanged = true;
         });
       });
+    rootSetting.settingEl.style.flexWrap = "wrap";
+    rootSetting.controlEl.style.width = "100%";
 
-    new Setting(contentEl)
+    const tempSetting = new Setting(contentEl)
       .setName("テンプレートパス")
       .setDesc("新規ノート作成時に使うテンプレートファイル")
       .addText((t) => {
         tempText = t;
+        t.inputEl.style.width = "100%";
         t.setValue(`${this.defaultTemplateFolder}/`).onChange((v) => {
           this.tempPath = v.trim();
           this.tempPathManuallyChanged = true;
@@ -121,6 +126,8 @@ export class CreateModeModal extends Modal {
           new FileSuggest(this.app, t.inputEl, this.defaultTemplateFolder);
         }
       });
+    tempSetting.settingEl.style.flexWrap = "wrap";
+    tempSetting.controlEl.style.width = "100%";
 
     const btnRow = contentEl.createDiv({ cls: "modal-button-container" });
 

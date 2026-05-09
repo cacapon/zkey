@@ -31,7 +31,8 @@ export default class ZkPlugin extends Plugin {
   async onload(): Promise<void> {
     const data = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings);
-    for (const mode of data?.modes ?? []) {
+    for (const raw of data?.modes ?? []) {
+      const mode = { rootPath: `${raw.dirPath}/${raw.name}.md`, ...raw };
       this.modeList.addMode(mode);
     }
     this.addSettingTab(new ZkSettingTab(this.app, this));
@@ -115,7 +116,7 @@ export default class ZkPlugin extends Plugin {
           this.notifier.notify("モードが選択されていません");
           return;
         }
-        await this.editor.openNote(`${mode.dirPath}/${mode.name}.md`);
+        await this.editor.openNote(mode.rootPath);
       },
     });
 
@@ -167,7 +168,7 @@ export default class ZkPlugin extends Plugin {
     new CreateModeModal(this.app, this.settings.defaultNoteFolder, templateFolder, async (input) => {
       const ok = await createMode(
         input.name,
-        input.dirPath,
+        input.rootPath,
         input.tempPath,
         this.modeList,
         this.fs,

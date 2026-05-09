@@ -15,7 +15,7 @@ function applyId(template: string, prefix: string, existingIds: string[], existi
 
 export async function createMode(
   name: string,
-  dirPath: string,
+  rootPath: string,
   tempPath: string,
   modeList: ModeList,
   fs: FileSystem,
@@ -23,8 +23,8 @@ export async function createMode(
   prefix = "",
   icon = ""
 ): Promise<boolean> {
-  const rootPath = `${dirPath}/${name}.md`;
-  const mode: Mode = { name, dirPath, tempPath, currPath: rootPath, prefix, icon };
+  const dirPath = rootPath.includes("/") ? rootPath.split("/").slice(0, -1).join("/") : "";
+  const mode: Mode = { name, dirPath, tempPath, currPath: rootPath, rootPath, prefix, icon };
 
   if (!modeList.addMode(mode)) {
     return false;

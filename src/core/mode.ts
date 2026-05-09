@@ -3,6 +3,7 @@ export interface Mode {
   dirPath: string;
   tempPath: string;
   currPath: string;
+  rootPath: string;
   prefix?: string;
   icon?: string;
 }
