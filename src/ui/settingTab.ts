@@ -23,6 +23,16 @@ export class ZkSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("本文へのzk-origin挿入")
+      .setDesc("モード作成時のテンプレートにzk-originのリンクを本文へ挿入します（↑: [[{{zk-origin}}]]）")
+      .addToggle((t) => {
+        t.setValue(this.plugin.settings.insertOriginInBody)
+          .onChange(async (v) => {
+            await this.plugin.updateSettings({ insertOriginInBody: v });
+          });
+      });
+
+    new Setting(containerEl)
       .setName("デフォルトノートフォルダ")
       .setDesc("モード作成時のフォルダパスの初期値に使われます")
       .addText((t) => {

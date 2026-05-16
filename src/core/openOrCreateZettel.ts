@@ -23,11 +23,11 @@ export async function openOrCreateZettel(
       const alias = genUniqueAlias(id, 4, metadataCache.getAliases(mode.dirPath)) ?? id;
       content = content.replace("{{zkid}}", id).replace("{{alias}}", alias);
     }
-    if (content.includes("{{origin}}")) {
+    if (content.includes("{{zk-origin}}")) {
       const activePath = editor.getActiveFilePath();
       const originPath = activePath || `${mode.dirPath}/${mode.name}.md`;
       const originName = originPath.split("/").pop()!.replace(/\.md$/, "");
-      content = content.replace("{{origin}}", originName);
+      content = content.replaceAll("{{zk-origin}}", originName);
     }
     await fs.createFile(path, content);
   }

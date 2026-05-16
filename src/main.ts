@@ -165,7 +165,7 @@ export default class ZkPlugin extends Plugin {
   private openUpsertModeModal(existingMode: Mode | null): void {
     const templateFolder = getCoreTemplateFolder(this.app) ?? this.settings.defaultTemplateFolder;
     new UpsertModeModal(this.app, existingMode, this.settings.defaultNoteFolder, templateFolder, async (input) => {
-      const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache);
+      const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache, this.settings.insertOriginInBody);
       if (!ok) {
         this.notifier.notify(`「${input.name}」は既に存在します`);
         return;
@@ -238,7 +238,7 @@ export default class ZkPlugin extends Plugin {
   }
 
   async upsertModeConfig(existingMode: Mode, input: { name: string; rootPath: string; tempPath: string; prefix: string; icon: string }): Promise<boolean> {
-    const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache);
+    const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache, this.settings.insertOriginInBody);
     if (ok) {
       await this.saveAll();
       this.updateStatusBar();

@@ -1,5 +1,5 @@
 ---
 zkid: "{{zkid}}"
 aliases: ["{{alias}}"]
-zk-origin: "[[{{origin}}]]"
+zk-origin: "[[{{zk-origin}}]]"
 ---

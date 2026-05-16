@@ -39,7 +39,8 @@ export async function upsertMode(
   input: ModeInput,
   modeList: ModeList,
   fs: FileSystem,
-  metadataCache: MetadataCache
+  metadataCache: MetadataCache,
+  insertOriginInBody = false
 ): Promise<boolean> {
   const dirPath = input.rootPath.includes("/") ? input.rootPath.split("/").slice(0, -1).join("/") : "";
 
@@ -83,7 +84,8 @@ export async function upsertMode(
   if (tempDir) await moveOrCreate(fs, null, tempDir, () => fs.createFolder(tempDir));
 
   // テンプレートを移動または作成
-  await moveOrCreate(fs, existingMode?.tempPath ?? null, input.tempPath, () => fs.createFile(input.tempPath, defaultTemplate));
+  const templateContent = insertOriginInBody ? `${defaultTemplate}\n↑: [[{{zk-origin}}]]` : defaultTemplate;
+  await moveOrCreate(fs, existingMode?.tempPath ?? null, input.tempPath, () => fs.createFile(input.tempPath, templateContent));
 
   // modeList を更新
   if (existingMode) modeList.deleteMode(existingMode);

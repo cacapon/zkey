@@ -102,8 +102,8 @@ describe("openOrCreateZettel", () => {
     expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", template);
   });
 
-  it("テンプレートに{{origin}}がある場合はアクティブファイル名のwikilinkに置換される", async () => {
-    const template = 'zk-origin: "[[{{origin}}]]"';
+  it("テンプレートに{{zk-origin}}がある場合はアクティブファイル名のwikilinkに置換される", async () => {
+    const template = 'zk-origin: "[[{{zk-origin}}]]"';
     const fs = makeFs(["/templates/Core.md"], template);
     const editor = makeEditor("/notes/Core/ParentNote.md");
     await openOrCreateZettel("NewNote", mode, modeList, fs, editor, makeMetadataCache());
@@ -111,10 +111,21 @@ describe("openOrCreateZettel", () => {
   });
 
   it("アクティブファイルがない場合はルートノート名をoriginにする", async () => {
-    const template = 'zk-origin: "[[{{origin}}]]"';
+    const template = 'zk-origin: "[[{{zk-origin}}]]"';
     const fs = makeFs(["/templates/Core.md"], template);
     const editor = makeEditor(null);
     await openOrCreateZettel("NewNote", mode, modeList, fs, editor, makeMetadataCache());
     expect(fs.createFile).toHaveBeenCalledWith("/notes/Core/NewNote.md", 'zk-origin: "[[Core]]"');
+  });
+
+  it("フロントマターと本文の両方に{{zk-origin}}がある場合はすべて置換される", async () => {
+    const template = '---\nzk-origin: "[[{{zk-origin}}]]"\n---\n\n↑: [[{{zk-origin}}]]';
+    const fs = makeFs(["/templates/Core.md"], template);
+    const editor = makeEditor("/notes/Core/ParentNote.md");
+    await openOrCreateZettel("NewNote", mode, modeList, fs, editor, makeMetadataCache());
+    expect(fs.createFile).toHaveBeenCalledWith(
+      "/notes/Core/NewNote.md",
+      '---\nzk-origin: "[[ParentNote]]"\n---\n\n↑: [[ParentNote]]'
+    );
   });
 });
