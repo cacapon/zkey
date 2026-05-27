@@ -14,6 +14,7 @@ export class Switcher extends SuggestModal<SuggestionItem> {
     placeholder?: string
   ) {
     super(app);
+    this.limit = 1000;
     if (placeholder) this.setPlaceholder(placeholder);
   }
 
