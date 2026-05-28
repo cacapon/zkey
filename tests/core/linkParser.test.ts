@@ -44,6 +44,11 @@ describe("parseLinkAtCursor", () => {
     const line = "[[ Core ]]";
     expect(parseLinkAtCursor(line, 4)).toBe("Core");
   });
+
+  it("テーブル内の\\|エスケープ付きエイリアスリンクはリンク先名を返す", () => {
+    const line = "| [[zk/common/TODO\\|TODO]] | 説明 |";
+    expect(parseLinkAtCursor(line, 5)).toBe("zk/common/TODO");
+  });
 });
 
 describe("extractLinks", () => {

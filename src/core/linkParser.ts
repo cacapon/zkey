@@ -1,8 +1,8 @@
-const WIKILINK_RE = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+const WIKILINK_RE = /\[\[([^\]|]+?)(?:\\)?(?:\|[^\]]+)?\]\]/g;
 
 // カーソル位置(col)を含む[[リンク]]のリンク先名を返す
 export function parseLinkAtCursor(line: string, col: number): string | null {
-  const re = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  const re = /\[\[([^\]|]+?)(?:\\)?(?:\|[^\]]+)?\]\]/g;
   let match;
   while ((match = re.exec(line)) !== null) {
     const start = match.index;
