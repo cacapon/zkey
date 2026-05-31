@@ -1,55 +1,75 @@
 <h1>
   <img src="assets/icon-markless.svg" width="64" style="vertical-align: middle;">
-  Zk – CLI-oriented Zettelkasten for Obsidian
+  ZKey – CLI-oriented Zettelkasten for Obsidian
 </h1>
 
-キー操作だけでノートを作り、繋げ、育てるための
-**Obsidian向け Zettelkasten プラグイン**。
+[日本語](README.ja.md)
 
-UI操作に頼らず、思考の流れを止めないことを最優先に設計しています。
+A **Zettelkasten plugin for Obsidian** designed to create, connect, and grow notes entirely through keyboard operations.
 
----
-
-## コンセプト
-
-- キー操作だけで完結
-- **モード**でノートの種類（Core / Temp / Ref など）を切り替える
-- 操作は UI ではなく **文脈（モード・選択テキスト）** で決まる
+Designed to keep your thinking uninterrupted — no mouse, no UI clicks required.
 
 ---
 
-## できること
+## Concept
 
-| コマンド | 説明 |
+- Everything done via keyboard
+- Switch between note types using **modes** (e.g. Core / Temp / Ref)
+- Behavior is determined by **context** (active mode, selected text, cursor position) — not UI
+
+---
+
+## Commands
+
+| Command | Description |
 |---|---|
-| Zk: モードを作成 | モードを新規作成する（フォルダ・rootノート・テンプレートを自動生成） |
-| Zk: モードを切り替え | モード一覧から切り替える |
-| Zk: モードを削除 | モード一覧から削除する |
-| Zk: Zettelを開く・作る | テキストを選択した状態で実行すると即作成＋リンク化、未選択の場合はノート名を入力して作成 |
+| ZKey: Open or create Zettel | With text selected: wraps it in a link and creates the note. Cursor on a link: opens it. Otherwise: prompts for a note name. |
+| ZKey: Link switcher | Lists forward links, backlinks, and 2-step links from the current note |
+| ZKey: Go to root note | Opens the root note of the current mode |
+| ZKey: Switch mode | Switch between modes |
+| ZKey: Create mode | Create a new mode (auto-generates folder, root note, and template) |
+| ZKey: Delete mode | Delete a mode from the list |
 
 ---
 
-## インストール
+## What is a Mode?
 
-[BRAT](https://github.com/TfTHacker/obsidian42-brat) を使ってインストールできます。
+A **mode** is a workspace tied to a specific type of note — for example, Core (main ideas), Temp (drafts), or Ref (references). You create modes for each context and switch between them as you work.
 
-1. BRATプラグインをインストール・有効化
-2. BRATの設定から「Add Beta plugin」を選択
-3. このリポジトリのURLを入力
+Each mode has:
+- **Folder** — where notes are stored
+- **Root note** — the entry point for the mode
+- **Template** — used when creating new notes
 
 ---
 
-## 設定
+## Settings
 
-Obsidianの設定 → Zk から以下を変更できます。
+Available under Settings → ZKey.
 
-| 設定 | 説明 | デフォルト |
+| Setting | Description | Default |
 |---|---|---|
-| デフォルトノートフォルダ | モード作成時のフォルダパスの初期値 | `Zk` |
-| デフォルトテンプレートフォルダ | モード作成時のテンプレートパスの初期値 | `Templates` |
+| Auto switch mode | Automatically switches to the mode of the file you open | On |
+| Insert zk-origin in body | Adds `↑: [[{{zk-origin}}]]` to the template when creating a mode | Off |
+| Default note folder | Initial folder path when creating a mode | `Zk` |
+| Template folder | Automatically sourced from the Obsidian Templates plugin settings | – |
 
 ---
 
-## ライセンス
+## Installation
+
+**Obsidian Community Plugins (coming soon)**
+
+Settings → Community plugins → Browse → search `ZKey`
+
+**BRAT (beta)**
+
+1. Install and enable [BRAT](https://github.com/TfTHacker/obsidian42-brat)
+2. Open BRAT settings and select "Add Beta plugin"
+3. Enter the URL of this repository
+
+---
+
+## License
 
 MIT License.
