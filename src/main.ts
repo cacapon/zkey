@@ -61,12 +61,14 @@ export default class ZkPlugin extends Plugin {
     this.addCommand({
       id: "zk-create-mode",
       name: "モードを作成",
+      icon: "folder-plus",
       callback: () => { this.openUpsertModeModal(null); },
     });
 
     this.addCommand({
       id: "zk-open-or-create-zettel",
       name: "Zettelを開く・作る",
+      icon: "file-search-corner",
       callback: async () => {
         const currentMode = this.currentMode.getMode(this.modeList);
         if (!currentMode) {
@@ -96,6 +98,7 @@ export default class ZkPlugin extends Plugin {
     this.addCommand({
       id: "zk-delete-mode",
       name: "モードを削除",
+      icon: "folder-x",
       callback: () => {
         new DeleteModeModal(this.app, this.modeList.getModes(), async (mode) => {
           deleteMode(mode, this.modeList, this.currentMode);
@@ -109,6 +112,7 @@ export default class ZkPlugin extends Plugin {
     this.addCommand({
       id: "zk-go-to-root",
       name: "rootノートに戻る",
+      icon: "home",
       callback: async () => {
         const mode = this.currentMode.getMode(this.modeList);
         if (!mode) {
@@ -122,6 +126,7 @@ export default class ZkPlugin extends Plugin {
     this.addCommand({
       id: "zk-link-switcher",
       name: "リンクスイッチャー",
+      icon: "network",
       callback: async () => {
         const filePath = this.editor.getActiveFilePath();
         if (!filePath) return;
@@ -141,6 +146,7 @@ export default class ZkPlugin extends Plugin {
     this.addCommand({
       id: "zk-switch-mode",
       name: "モード切り替え",
+      icon: "layers",
       callback: () => {
         new Switcher(this.app, [
           ...this.modeList.getModes().map((mode) => ({
