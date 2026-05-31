@@ -1,5 +1,5 @@
 {
-  "name": "zk",
+  "name": "zkey",
   "version": "0.2.0",
   "description": "CLI-oriented Zettelkasten for Obsidian",
   "main": "main.js",

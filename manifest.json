@@ -1,6 +1,6 @@
 {
-  "id": "zk",
-  "name": "Zk",
+  "id": "zkey",
+  "name": "ZKey",
   "version": "1.3.2",
   "minAppVersion": "1.4.0",
   "description": "CLI-oriented Zettelkasten for Obsidian",

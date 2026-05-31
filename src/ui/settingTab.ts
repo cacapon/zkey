@@ -1,10 +1,10 @@
 import { App, PluginSettingTab, Setting, setIcon } from "obsidian";
-import type ZkPlugin from "../main";
+import type ZKeyPlugin from "../main";
 import { UpsertModeModal } from "./upsertModeModal";
 import { getCoreTemplateFolder } from "../infra/obsidianTemplateFolder";
 
-export class ZkSettingTab extends PluginSettingTab {
-  constructor(app: App, private plugin: ZkPlugin) {
+export class ZKeySettingTab extends PluginSettingTab {
+  constructor(app: App, private plugin: ZKeyPlugin) {
     super(app, plugin);
   }
 
@@ -67,7 +67,7 @@ export class ZkSettingTab extends PluginSettingTab {
       const setting = new Setting(containerEl).setName(mode.name);
 
       if (mode.icon) {
-        const iconEl = setting.nameEl.createSpan({ cls: "zk-mode-icon" });
+        const iconEl = setting.nameEl.createSpan({ cls: "zkey-mode-icon" });
         iconEl.style.marginRight = "6px";
         setIcon(iconEl, mode.icon);
         setting.nameEl.prepend(iconEl);

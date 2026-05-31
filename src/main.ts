@@ -13,11 +13,11 @@ import { Switcher } from "./ui/switcher";
 import { openOrCreateZettel } from "./core/openOrCreateZettel";
 import { DeleteModeModal } from "./ui/deleteModeModal";
 import { deleteMode } from "./core/deleteMode";
-import { ZkSettingTab } from "./ui/settingTab";
-import { ZkSettings, DEFAULT_SETTINGS } from "./core/zkSettings";
+import { ZKeySettingTab } from "./ui/settingTab";
+import { ZKeySettings, DEFAULT_SETTINGS } from "./core/zkSettings";
 import { getLinkSwitcherItems } from "./core/linkSwitcherItems";
 
-export default class ZkPlugin extends Plugin {
+export default class ZKeyPlugin extends Plugin {
   private modeList = new ModeList();
   private currentMode = new CurrentMode();
   private fs = new ObsidianFileSystem(this.app.vault);
@@ -25,7 +25,7 @@ export default class ZkPlugin extends Plugin {
   private notifier = new ObsidianNotifier();
   private metadataCache = new ObsidianMetadataCache(this.app.metadataCache);
   private statusBarEl = this.addStatusBarItem();
-  settings!: ZkSettings;
+  settings!: ZKeySettings;
 
   async onload(): Promise<void> {
     const data = await this.loadData();
@@ -34,7 +34,7 @@ export default class ZkPlugin extends Plugin {
       const mode = { rootPath: `${raw.dirPath}/${raw.name}.md`, ...raw };
       this.modeList.addMode(mode);
     }
-    this.addSettingTab(new ZkSettingTab(this.app, this));
+    this.addSettingTab(new ZKeySettingTab(this.app, this));
 
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
       if (!this.settings.autoSwitchMode) return;
@@ -59,14 +59,14 @@ export default class ZkPlugin extends Plugin {
     }));
 
     this.addCommand({
-      id: "zk-create-mode",
+      id: "zkey-create-mode",
       name: "モードを作成",
       icon: "folder-plus",
       callback: () => { this.openUpsertModeModal(null); },
     });
 
     this.addCommand({
-      id: "zk-open-or-create-zettel",
+      id: "zkey-open-or-create-zettel",
       name: "Zettelを開く・作る",
       icon: "file-search-corner",
       callback: async () => {
@@ -96,7 +96,7 @@ export default class ZkPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "zk-delete-mode",
+      id: "zkey-delete-mode",
       name: "モードを削除",
       icon: "folder-x",
       callback: () => {
@@ -110,7 +110,7 @@ export default class ZkPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "zk-go-to-root",
+      id: "zkey-go-to-root",
       name: "rootノートに戻る",
       icon: "home",
       callback: async () => {
@@ -124,7 +124,7 @@ export default class ZkPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "zk-link-switcher",
+      id: "zkey-link-switcher",
       name: "リンクスイッチャー",
       icon: "network",
       callback: async () => {
@@ -144,7 +144,7 @@ export default class ZkPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "zk-switch-mode",
+      id: "zkey-switch-mode",
       name: "モード切り替え",
       icon: "layers",
       callback: () => {
@@ -234,7 +234,7 @@ export default class ZkPlugin extends Plugin {
     await this.saveData({ settings: this.settings, modes: this.modeList.getModes() });
   }
 
-  async updateSettings(patch: Partial<ZkSettings>): Promise<void> {
+  async updateSettings(patch: Partial<ZKeySettings>): Promise<void> {
     Object.assign(this.settings, patch);
     await this.saveAll();
   }

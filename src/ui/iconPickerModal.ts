@@ -12,7 +12,7 @@ export class IconPickerModal extends SuggestModal<string> {
   }
 
   renderSuggestion(iconId: string, el: HTMLElement): void {
-    const row = el.createDiv({ cls: "zk-icon-suggestion" });
+    const row = el.createDiv({ cls: "zkey-icon-suggestion" });
     if (iconId === "(なし)") {
       row.createSpan({ text: "(なし)" });
     } else {
