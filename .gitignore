@@ -1,6 +1,9 @@
 # Claude Code local instructions (machine-specific)
 CLAUDE.md
 
+# Local deploy scripts (machine-specific paths)
+scripts/deploy-test.sh
+
 # Obsidian plugin build output
 main.js
 main.js.map
