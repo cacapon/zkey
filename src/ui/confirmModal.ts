@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
+import { i18n } from "../i18n";
 
 export class ConfirmModal extends Modal {
   constructor(
@@ -16,12 +17,12 @@ export class ConfirmModal extends Modal {
 
     new Setting(contentEl)
       .addButton((btn) => {
-        btn.setButtonText("キャンセル").onClick(() => {
+        btn.setButtonText(i18n.btnCancel).onClick(() => {
           this.close();
         });
       })
       .addButton((btn) => {
-        btn.setButtonText("削除").setCta().setWarning().onClick(() => {
+        btn.setButtonText(i18n.btnDelete).setCta().setWarning().onClick(() => {
           this.close();
           this.onConfirm();
         });

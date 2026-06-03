@@ -1,6 +1,7 @@
 import { App, SuggestModal } from "obsidian";
 import { Mode } from "../core/mode";
 import { ConfirmModal } from "./confirmModal";
+import { i18n } from "../i18n";
 
 export class DeleteModeModal extends SuggestModal<Mode> {
   constructor(
@@ -25,7 +26,7 @@ export class DeleteModeModal extends SuggestModal<Mode> {
   onChooseSuggestion(mode: Mode): void {
     new ConfirmModal(
       this.app,
-      `「${mode.name}」を削除しますか？`,
+      i18n.confirmDelete(mode.name),
       () => this.onDelete(mode)
     ).open();
   }

@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type ZKeyPlugin from "../main";
 import { UpsertModeModal } from "./upsertModeModal";
 import { getCoreTemplateFolder } from "../infra/obsidianTemplateFolder";
+import { i18n } from "../i18n";
 
 export class ZKeySettingTab extends PluginSettingTab {
   constructor(app: App, private plugin: ZKeyPlugin) {
@@ -13,8 +14,8 @@ export class ZKeySettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("モードの自動切り替え")
-      .setDesc("ファイルを開いたとき、そのファイルのモードに自動で切り替えます")
+      .setName(i18n.settingAutoSwitchName)
+      .setDesc(i18n.settingAutoSwitchDesc)
       .addToggle((t) => {
         t.setValue(this.plugin.settings.autoSwitchMode)
           .onChange(async (v) => {
@@ -23,8 +24,8 @@ export class ZKeySettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("本文へのzk-origin挿入")
-      .setDesc("モード作成時のテンプレートにzk-originのリンクを本文へ挿入します（↑: [[{{zk-origin}}]]）")
+      .setName(i18n.settingInsertOriginName)
+      .setDesc(i18n.settingInsertOriginDesc)
       .addToggle((t) => {
         t.setValue(this.plugin.settings.insertOriginInBody)
           .onChange(async (v) => {
@@ -33,8 +34,8 @@ export class ZKeySettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("デフォルトノートフォルダ")
-      .setDesc("モード作成時のフォルダパスの初期値に使われます")
+      .setName(i18n.settingDefaultFolderName)
+      .setDesc(i18n.settingDefaultFolderDesc)
       .addText((t) => {
         t.setPlaceholder("Zk")
           .setValue(this.plugin.settings.defaultNoteFolder)
@@ -46,22 +47,22 @@ export class ZKeySettingTab extends PluginSettingTab {
     const templateFolder = getCoreTemplateFolder(this.app);
     const templateEnabled = templateFolder !== null;
     const templateSetting = new Setting(containerEl)
-      .setName("テンプレートフォルダ")
+      .setName(i18n.settingTemplateFolderName)
       .setDesc(
         templateEnabled
-          ? `Obsidian Templates プラグインのフォルダを使用しています: ${templateFolder || "（未設定）"}`
-          : "Obsidian Templates プラグインが無効です。コアプラグインから有効にしてください。"
+          ? i18n.settingTemplateFolderEnabled(templateFolder || "")
+          : i18n.settingTemplateFolderDisabled
       );
     if (templateEnabled) {
       templateSetting.addButton((btn) => {
-        btn.setButtonText("設定を開く").onClick(() => {
+        btn.setButtonText(i18n.settingOpenSettings).onClick(() => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (this.app as any).setting?.openTabById("templates");
         });
       });
     }
 
-    containerEl.createEl("h2", { text: "モード設定" });
+    containerEl.createEl("h2", { text: i18n.settingModesHeading });
 
     for (const mode of this.plugin.getModes()) {
       const setting = new Setting(containerEl).setName(mode.name);
@@ -75,7 +76,7 @@ export class ZKeySettingTab extends PluginSettingTab {
 
       setting.addButton((btn) => {
         setIcon(btn.buttonEl, "settings");
-        btn.setTooltip("編集").onClick(() => {
+        btn.setTooltip(i18n.settingEditMode).onClick(() => {
           new UpsertModeModal(this.app, mode, this.plugin.settings.defaultNoteFolder, templateFolder ?? this.plugin.settings.defaultTemplateFolder, async (input) => {
             await this.plugin.upsertModeConfig(mode, input);
             this.display();

@@ -1,4 +1,4 @@
-import { Plugin, setIcon } from "obsidian";
+import { Plugin, moment, setIcon } from "obsidian";
 import { Mode } from "./core/mode";
 import { ModeList } from "./core/modeList";
 import { CurrentMode } from "./core/currentMode";
@@ -16,6 +16,7 @@ import { deleteMode } from "./core/deleteMode";
 import { ZKeySettingTab } from "./ui/settingTab";
 import { ZKeySettings, DEFAULT_SETTINGS } from "./core/zkSettings";
 import { getLinkSwitcherItems } from "./core/linkSwitcherItems";
+import { i18n } from "./i18n";
 
 export default class ZKeyPlugin extends Plugin {
   private modeList = new ModeList();
@@ -46,12 +47,12 @@ export default class ZKeyPlugin extends Plugin {
         this.modeList.updateMode({ ...nextMode, currPath: filePath });
         this.currentMode.setMode(nextMode);
         if (prevMode?.name !== nextMode.name) {
-          this.notifier.notify(`「${nextMode.name}」に切り替えました`);
+          this.notifier.notify(i18n.switchedToMode(nextMode.name));
         }
       } else {
         if (prevMode) {
           this.currentMode.clearMode();
-          this.notifier.notify("モードなし");
+          this.notifier.notify(i18n.noMode);
         }
       }
       this.updateStatusBar();
@@ -60,14 +61,14 @@ export default class ZKeyPlugin extends Plugin {
 
     this.addCommand({
       id: "zkey-create-mode",
-      name: "モードを作成",
+      name: i18n.cmdCreateMode,
       icon: "folder-plus",
       callback: () => { this.openUpsertModeModal(null); },
     });
 
     this.addCommand({
       id: "zkey-open-or-create-zettel",
-      name: "Zettelを開く・作る",
+      name: i18n.cmdOpenOrCreateZettel,
       icon: "file-search-corner",
       callback: async () => {
         const currentMode = this.currentMode.getMode(this.modeList);
@@ -78,13 +79,13 @@ export default class ZKeyPlugin extends Plugin {
               sub: mode.dirPath,
               onChoose: async () => {
                 this.currentMode.setMode(mode);
-                this.notifier.notify(`「${mode.name}」に切り替えました`);
+                this.notifier.notify(i18n.switchedToMode(mode.name));
                 this.updateStatusBar();
                 await this.openZettelFlow(mode);
               },
             })),
             {
-              label: "+ 新しいモードを作成",
+              label: i18n.createNewMode,
               onChoose: () => { this.openUpsertModeModal(null); },
             },
           ]).open();
@@ -97,13 +98,13 @@ export default class ZKeyPlugin extends Plugin {
 
     this.addCommand({
       id: "zkey-delete-mode",
-      name: "モードを削除",
+      name: i18n.cmdDeleteMode,
       icon: "folder-x",
       callback: () => {
         new DeleteModeModal(this.app, this.modeList.getModes(), async (mode) => {
           deleteMode(mode, this.modeList, this.currentMode);
           await this.saveAll();
-          this.notifier.notify(`「${mode.name}」を削除しました`);
+          this.notifier.notify(i18n.modeDeleted(mode.name));
           this.updateStatusBar();
         }).open();
       },
@@ -111,12 +112,12 @@ export default class ZKeyPlugin extends Plugin {
 
     this.addCommand({
       id: "zkey-go-to-root",
-      name: "rootノートに戻る",
+      name: i18n.cmdGoToRoot,
       icon: "home",
       callback: async () => {
         const mode = this.currentMode.getMode(this.modeList);
         if (!mode) {
-          this.notifier.notify("モードが選択されていません");
+          this.notifier.notify(i18n.noModeSelected);
           return;
         }
         await this.editor.openNote(mode.rootPath);
@@ -125,14 +126,14 @@ export default class ZKeyPlugin extends Plugin {
 
     this.addCommand({
       id: "zkey-link-switcher",
-      name: "リンクスイッチャー",
+      name: i18n.cmdLinkSwitcher,
       icon: "network",
       callback: async () => {
         const filePath = this.editor.getActiveFilePath();
         if (!filePath) return;
         const items = getLinkSwitcherItems(filePath, this.metadataCache);
         if (items.length === 0) {
-          this.notifier.notify("リンクが見つかりません");
+          this.notifier.notify(i18n.noLinksFound);
           return;
         }
         const typeLabel = { forward: "link", backlink: "backlink", "2step": "2step-link" };
@@ -145,7 +146,7 @@ export default class ZKeyPlugin extends Plugin {
 
     this.addCommand({
       id: "zkey-switch-mode",
-      name: "モード切り替え",
+      name: i18n.cmdSwitchMode,
       icon: "layers",
       callback: () => {
         new Switcher(this.app, [
@@ -155,12 +156,12 @@ export default class ZKeyPlugin extends Plugin {
             onChoose: async () => {
               this.currentMode.setMode(mode);
               await this.editor.openNote(mode.currPath);
-              this.notifier.notify(`「${mode.name}」に切り替えました`);
+              this.notifier.notify(i18n.switchedToMode(mode.name));
               this.updateStatusBar();
             },
           })),
           {
-            label: "+ 新しいモードを作成",
+            label: i18n.createNewMode,
             onChoose: () => { this.openUpsertModeModal(null); },
           },
         ]).open();
@@ -171,9 +172,9 @@ export default class ZKeyPlugin extends Plugin {
   private openUpsertModeModal(existingMode: Mode | null): void {
     const templateFolder = getCoreTemplateFolder(this.app) ?? this.settings.defaultTemplateFolder;
     new UpsertModeModal(this.app, existingMode, this.settings.defaultNoteFolder, templateFolder, async (input) => {
-      const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache, this.settings.insertOriginInBody);
+      const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache, this.settings.insertOriginInBody, moment.locale());
       if (!ok) {
-        this.notifier.notify(`「${input.name}」は既に存在します`);
+        this.notifier.notify(i18n.modeAlreadyExists(input.name));
         return;
       }
       const mode = this.modeList.getModes().find((m) => m.name === input.name);
@@ -182,9 +183,9 @@ export default class ZKeyPlugin extends Plugin {
         if (!existingMode) {
           this.currentMode.setMode(mode);
           await this.editor.openNote(mode.currPath);
-          this.notifier.notify(`「${input.name}」を作成しました`);
+          this.notifier.notify(i18n.modeCreated(input.name));
         } else {
-          this.notifier.notify(`「${input.name}」を更新しました`);
+          this.notifier.notify(i18n.modeUpdated(input.name));
         }
         this.updateStatusBar();
       }
@@ -196,7 +197,7 @@ export default class ZKeyPlugin extends Plugin {
     if (selection) {
       this.editor.replaceSelection(`[[${selection}]]`);
       const created = await openOrCreateZettel(selection, mode, this.modeList, this.fs, this.editor, this.metadataCache);
-      if (created) this.notifier.notify(`「${selection}」を作成しました`);
+      if (created) this.notifier.notify(i18n.noteCreated(selection));
       return;
     }
 
@@ -208,7 +209,7 @@ export default class ZKeyPlugin extends Plugin {
         await this.editor.openNote(cursorLink);
       } else {
         const created = await openOrCreateZettel(cursorLink, mode, this.modeList, this.fs, this.editor, this.metadataCache);
-        if (created) this.notifier.notify(`「${cursorLink}」を作成しました`);
+        if (created) this.notifier.notify(i18n.noteCreated(cursorLink));
       }
       return;
     }
@@ -221,13 +222,13 @@ export default class ZKeyPlugin extends Plugin {
       const exact = filtered.some((i) => i.label.toLowerCase() === query.toLowerCase());
       if (exact) return null;
       return {
-        label: `「${query}」を新規作成`,
+        label: i18n.createNote(query),
         onChoose: async () => {
           const created = await openOrCreateZettel(query, mode, this.modeList, this.fs, this.editor, this.metadataCache);
-          if (created) this.notifier.notify(`「${query}」を作成しました`);
+          if (created) this.notifier.notify(i18n.noteCreated(query));
         },
       };
-    }, `「${mode.name}」のノート名を入力…`).open();
+    }, i18n.enterNoteName(mode.name)).open();
   }
 
   private async saveAll(): Promise<void> {
@@ -244,13 +245,13 @@ export default class ZKeyPlugin extends Plugin {
   }
 
   async upsertModeConfig(existingMode: Mode, input: { name: string; rootPath: string; tempPath: string; prefix: string; icon: string }): Promise<boolean> {
-    const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache, this.settings.insertOriginInBody);
+    const ok = await upsertMode(existingMode, input, this.modeList, this.fs, this.metadataCache, this.settings.insertOriginInBody, moment.locale());
     if (ok) {
       await this.saveAll();
       this.updateStatusBar();
-      this.notifier.notify(`「${input.name}」を更新しました`);
+      this.notifier.notify(i18n.modeUpdated(input.name));
     } else {
-      this.notifier.notify(`「${input.name}」は既に存在します`);
+      this.notifier.notify(i18n.modeAlreadyExists(input.name));
     }
     return ok;
   }

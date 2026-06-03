@@ -4,7 +4,8 @@ import { FileSystem } from "./fileSystem";
 import { MetadataCache } from "./metadataCache";
 import { genUniqueID, genUniqueAlias } from "./idGenerator";
 import defaultTemplate from "./templates/defaultTemplate.md";
-import rootTemplate from "./templates/rootTemplate.md";
+import rootTemplateJa from "./templates/rootTemplate.ja.md";
+import rootTemplateEn from "./templates/rootTemplate.en.md";
 
 export interface ModeInput {
   name: string;
@@ -40,7 +41,8 @@ export async function upsertMode(
   modeList: ModeList,
   fs: FileSystem,
   metadataCache: MetadataCache,
-  insertOriginInBody = false
+  insertOriginInBody = false,
+  locale = "en"
 ): Promise<boolean> {
   const dirPath = input.rootPath.includes("/") ? input.rootPath.split("/").slice(0, -1).join("/") : "";
 
@@ -64,7 +66,12 @@ export async function upsertMode(
   }
 
   const rootFilename = input.rootPath.split("/").pop()!;
-  const rootContent = applyId(rootTemplate, input.prefix, metadataCache.getIds(dirPath), metadataCache.getAliases(dirPath));
+  const rawRootTemplate = locale === "ja" ? rootTemplateJa : rootTemplateEn;
+  const tempFilename = input.tempPath.split("/").pop()!.replace(/\.md$/, "");
+  const rootContent = applyId(rawRootTemplate, input.prefix, metadataCache.getIds(dirPath), metadataCache.getAliases(dirPath))
+    .replaceAll("{{mode-name}}", input.name)
+    .replaceAll("{{root-name}}", newRootName)
+    .replaceAll("{{temp-name}}", tempFilename);
   const tempDir = input.tempPath.includes("/") ? input.tempPath.split("/").slice(0, -1).join("/") : null;
 
   if (existingMode) {

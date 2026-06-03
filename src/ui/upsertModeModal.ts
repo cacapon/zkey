@@ -3,6 +3,7 @@ import { Mode } from "../core/mode";
 import { ModeInput } from "../core/upsertMode";
 import { IconPickerModal } from "./iconPickerModal";
 import { FileSuggest } from "./fileSuggest";
+import { i18n } from "../i18n";
 
 export class UpsertModeModal extends Modal {
   private name: string;
@@ -30,7 +31,7 @@ export class UpsertModeModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     const isEdit = this.existingMode !== null;
-    contentEl.createEl("h2", { text: isEdit ? `「${this.existingMode!.name}」を編集` : "新しいモードを作成" });
+    contentEl.createEl("h2", { text: isEdit ? i18n.editModeTitle(this.existingMode!.name) : i18n.createModeTitle });
 
     const errorEl = contentEl.createEl("p");
     errorEl.style.color = "var(--text-error)";
@@ -38,7 +39,7 @@ export class UpsertModeModal extends Modal {
 
     const submit = () => {
       if (!this.name) {
-        errorEl.setText("モード名を入力してください");
+        errorEl.setText(i18n.modeNameRequired);
         errorEl.style.display = "";
         return;
       }
@@ -63,19 +64,19 @@ export class UpsertModeModal extends Modal {
     };
 
     new Setting(contentEl)
-      .setName("モード名")
-      .setDesc("表示名（例: Core, Temp）。大文字・小文字は同じものとして扱われます。")
+      .setName(i18n.fieldModeName)
+      .setDesc(i18n.fieldModeNameDesc)
       .addButton((btn) => {
-        btn.setTooltip("アイコンを選択").onClick(() => {
+        btn.setTooltip(i18n.fieldSelectIcon).onClick(() => {
           new IconPickerModal(this.app, (iconId) => {
             this.icon = iconId;
             btn.buttonEl.empty();
             if (iconId) setIcon(btn.buttonEl, iconId);
-            else btn.buttonEl.setText("(なし)");
+            else btn.buttonEl.setText(i18n.noIcon);
           }).open();
         });
         if (this.icon) setIcon(btn.buttonEl, this.icon);
-        else btn.buttonEl.setText("(なし)");
+        else btn.buttonEl.setText(i18n.noIcon);
       })
       .addText((t) => {
         t.setValue(this.name).onChange((v) => {
@@ -89,15 +90,15 @@ export class UpsertModeModal extends Modal {
       });
 
     new Setting(contentEl)
-      .setName("IDプレフィックス")
-      .setDesc("ノートIDの先頭に付ける文字（例: C → Ca3f9x2...）。空欄でも可。")
+      .setName(i18n.fieldIdPrefix)
+      .setDesc(i18n.fieldIdPrefixDesc)
       .addText((t) => {
         t.setValue(this.prefix).onChange((v) => { this.prefix = v.trim(); });
       });
 
     const rootSetting = new Setting(contentEl)
-      .setName("ルートノートパス")
-      .setDesc("モードの起点となるノート。フォルダパスはここから自動設定されます。")
+      .setName(i18n.fieldRootPath)
+      .setDesc(i18n.fieldRootPathDesc)
       .addText((t) => {
         rootText = t;
         t.inputEl.style.width = "100%";
@@ -109,8 +110,8 @@ export class UpsertModeModal extends Modal {
     rootSetting.controlEl.style.width = "100%";
 
     const tempSetting = new Setting(contentEl)
-      .setName("テンプレートパス")
-      .setDesc("新規ノート作成時に使うテンプレートファイル")
+      .setName(i18n.fieldTemplatePath)
+      .setDesc(i18n.fieldTemplatePathDesc)
       .addText((t) => {
         tempText = t;
         t.inputEl.style.width = "100%";
@@ -125,8 +126,8 @@ export class UpsertModeModal extends Modal {
     tempSetting.controlEl.style.width = "100%";
 
     const btnRow = contentEl.createDiv({ cls: "modal-button-container" });
-    btnRow.createEl("button", { text: "キャンセル" }).addEventListener("click", () => { this.close(); });
-    btnRow.createEl("button", { text: isEdit ? "保存" : "作成", cls: "mod-cta" }).addEventListener("click", submit);
+    btnRow.createEl("button", { text: i18n.btnCancel }).addEventListener("click", () => { this.close(); });
+    btnRow.createEl("button", { text: isEdit ? i18n.btnSave : i18n.btnCreate, cls: "mod-cta" }).addEventListener("click", submit);
   }
 
   onClose(): void {
